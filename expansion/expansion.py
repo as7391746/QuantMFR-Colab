@@ -52,12 +52,32 @@ class _ParamNamespace:
         return sp.Symbol(name)
 
 
+# Names the engine creates internally; a user variable with one of these
+# names (or matching the costate/shock patterns) would silently collide.
+_RESERVED = {"log_gk", "q", "log_cmk", "vmk", "rmv", "ms", "mg"}
+_RESERVED_PATTERNS = re.compile(r"m\d+|W\d+")
+
+
+def _check_variable_name(name):
+    if "_t" in name:
+        raise ValueError(
+            f"variable name '{name}' contains '_t': the engine rewrites "
+            f"every '_t' inside a name to '_tp1', which would silently "
+            f"corrupt it. Pick a name without '_t' (e.g. 'Xtilde').")
+    if name in _RESERVED or _RESERVED_PATTERNS.fullmatch(name):
+        raise ValueError(
+            f"variable name '{name}' collides with an engine-internal "
+            f"symbol. Reserved: {sorted(_RESERVED)}, m<digit>, W<digit>.")
+
+
 class Model:
     """Declare states, controls and equations in the user's own notation."""
 
     def __init__(self, states, controls, shocks=3):
         self.state_names = list(states)
         self.control_names = list(controls)
+        for name in self.state_names + self.control_names:
+            _check_variable_name(name)
         self.n_shocks = int(shocks)
         self.p = _ParamNamespace()
         self.q = sp.Symbol("q_t")
@@ -92,12 +112,19 @@ class Model:
 
         flat = {}
         for name, value in params.items():
+            if name.endswith(("_t", "_tp1")):
+                raise ValueError(
+                    f"parameter name '{name}' ends in '_t'/'_tp1' and would "
+                    f"collide with the engine's variable symbols.")
             arr = np.asarray(value, dtype=float)
-            if arr.ndim == 0:
-                flat[name] = float(arr)
-            else:                        # vector parameter -> name1, name2, ...
-                for i, v in enumerate(arr):
-                    flat[f"{name}{i + 1}"] = float(v)
+            keys = ([name] if arr.ndim == 0
+                    else [f"{name}{i + 1}" for i in range(len(arr))])
+            for key, v in zip(keys, np.atleast_1d(arr)):
+                if key in flat:
+                    raise ValueError(
+                        f"parameter '{key}' appears twice (a vector "
+                        f"parameter expands to name1, name2, ...).")
+                flat[key] = float(v)
         parameter_names = {name: sp.Symbol(name) for name in flat}
         args = list(flat.values())
 
