@@ -1,69 +1,27 @@
 #!/usr/bin/env python3
-"""Generate colab.ipynb FROM the folder's .py sources.
+"""Generate colab.ipynb — Chapter 11, Figures 11.1-11.3.
 
-Layout (per Kunjian's spec): two sections.
-  Codes    — exactly five cells: MODEL, SOLVE, FIG 11.1, FIG 11.2, FIG 11.3
-  Analysis — short interpretive text (economics, calibration notes,
-             verification summary)
-
-The two .py files (model.py / solve.py) remain the single source of truth:
-their bodies are spliced verbatim into the MODEL and SOLVE cells at the
-`# ====` section markers. Edit the .py, re-run this script, push — the
-notebook cannot drift from the code of record. The notebook is fully
-standalone (no git clone, no downloads).
+Layout: two sections. Codes (setup, model, solve, one cell per figure) and
+Analysis. The solve step imports the expansion engine (uncertain_expansion)
+directly from this repository's src/, through the declaration layer in
+expansion/. The independent direct implementation (model.py / solve.py in
+the repository root) is kept for cross-checking and is not used here.
 """
 
 import json
-import re
 
-STRIP_LINES = re.compile(
-    r"^(import numpy as np$|from scipy[^\n]*|from model import[^\n]*)", re.M)
-
-
-def md(src):
-    return {"cell_type": "markdown", "metadata": {},
-            "source": src.splitlines(keepends=True)}
-
-
-def code(src):
-    return {"cell_type": "code", "metadata": {}, "outputs": [],
-            "execution_count": None, "source": src.splitlines(keepends=True)}
-
-
-def strip_module(text):
-    text = re.sub(r'^""".*?"""\n', "", text, flags=re.S)
-    text = text.split("if __name__")[0]
-    text = STRIP_LINES.sub("", text)
-    text = re.sub(r"\ndef main\(\):.*", "\n", text, flags=re.S)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip() + "\n"
-
-
-def sections(path):
-    text = strip_module(open(path).read())
-    parts = re.split(r"# =+\n# (.+)\n(?:#[^\n]*\n)*?# =+\n", text)
-    out = []
-    if parts[0].strip():
-        out.append(("", parts[0]))
-    for i in range(1, len(parts), 2):
-        out.append((parts[i].strip(), parts[i + 1]))
-    return [(t, b.strip() + "\n") for t, b in out if b.strip()]
-
-
-def get(secs, prefix):
-    for t, b in secs:
-        if t.startswith(prefix):
-            return b
-    raise KeyError(prefix)
-
+md = lambda s: {"cell_type": "markdown", "metadata": {},
+                "source": s.splitlines(keepends=True)}
+code = lambda s: {"cell_type": "code", "metadata": {}, "outputs": [],
+                  "execution_count": None,
+                  "source": s.splitlines(keepends=True)}
 
 TITLE = r"""# Chapter 11: Figures 11.1–11.3
 
-The AK production economy of Chapter 11, solved with the second-order
-small-noise expansion described in the appendix ("approach one"), and the
-Borovička–Hansen (2014) shock elasticities computed from that solution.
-Everything is quarterly and in the chapter's notation; parameters follow the
-appendix table and Hansen–Khorrami–Tourre (2024).
+The AK production economy of Chapter 11, declared in the chapter's notation
+and solved with the expansion engine (`uncertain_expansion`, imported
+directly from this repository's `src/`). Parameters follow the appendix
+table and Hansen–Khorrami–Tourre (2024), converted to quarterly.
 
 ![method](https://raw.githubusercontent.com/as7391746/QuantMFR-Colab/main/assets/method.png)
 
@@ -73,8 +31,159 @@ recursive-utility change of measure $N^0$ already matters at first order: it
 shifts the shock mean to $\mu^0$, which is what generates the shock-price
 elasticities in Figures 11.1 and 11.3.*
 
-**Runtime → Run all** (~10 s; the 13-scenario solve itself is ~0.2 s). To
-experiment, edit `PARAMS` or `SCENARIOS` in the model cell and re-run."""
+**Runtime → Run all** (~3 min: a shallow clone, then thirteen expansion
+solves of a few seconds each). To experiment, edit `PARAMS` or `SCENARIOS`
+and re-run."""
+
+SETUP = """# ================================ SETUP =================================
+# Fetch this repository and put the expansion engine (src/) and the
+# declaration layer (expansion/) on the path.
+%pip -q install autograd
+import os, sys, io, time, contextlib
+if not os.path.isdir("QuantMFR-Colab"):
+    !git clone -q --depth 1 https://github.com/as7391746/QuantMFR-Colab
+sys.path.insert(0, os.path.abspath("QuantMFR-Colab/src"))
+sys.path.insert(0, os.path.abspath("QuantMFR-Colab/expansion"))
+
+import numpy as np
+import sympy as sp
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from uncertain_expansion import uncertain_expansion   # the engine, direct
+from expansion import Model                            # declaration layer
+import uncertain_expansion as _engine
+print("engine:", _engine.__file__)"""
+
+MODEL = r"""# ================================ MODEL =================================
+# Chapter 11 AK economy, quarterly, in the chapter's own notation.
+# States {eq}`equation2`; capital evolution (display after {eq}`equation3`);
+# resource constraint {eq}`equation3`; preferences {eq}`value_recur5`/
+# {eq}`value_risk6`. Parameters: appendix table / HKT 2024 (annual drifts
+# / 4, volatilities = sqrt(3) x the monthly vectors).
+SQRT3 = np.sqrt(3.0)
+PARAMS = {
+    "beta": np.exp(-0.01 / 4),        # quarterly discount factor
+    "zeta": 32.0,                     # adjustment-cost curvature (= 8 x 4)
+    "iota_k": 0.01,                   # capital drift constant
+    "nu_k": 0.01,                     # capital loading on Z1
+    "nu_1": 0.014,                    # Z1 mean reversion
+    "nu_2": 0.0485,                   # Z2 mean reversion
+    "mu_2": 6.3e-6,                   # central tendency of exp(Z2)
+    "sigma_k": SQRT3 * np.array([0.92, 0.40, 0.0]),
+    "sigma_1": SQRT3 * np.array([0.0, 5.70, 0.0]),
+    "sigma_2": SQRT3 * np.array([0.0, 0.0, 0.00031]),
+}
+# alpha is annual, paired with rho so all rho share the same steady-state
+# growth (HKT Table 3); quarterly = /4. The base case uses 0.0922.
+ALPHA_ANNUAL = {0.67: 0.082, 1.001: 0.092, 1.5: 0.108}
+ALPHA_BASE = 0.0922
+
+m = Model(states=["Z1", "Z2"], controls=["D1", "D2"], shocks=3)
+Z1, Z2, D1, D2 = m["Z1"], m["Z2"], m["D1"], m["D2"]
+p, q = m.p, m.q
+
+# exogenous states {eq}`equation2`
+m.state["Z1"] = Z1 - p.nu_1 * Z1 + sp.exp(Z2 / 2) * m.dot("sigma_1")
+m.state["Z2"] = (Z2 - p.nu_2 * (1 - p.mu_2 * sp.exp(-Z2))
+                 - q**2 / 2 * m.norm2("sigma_2") * sp.exp(-Z2)
+                 + sp.exp(-Z2 / 2) * m.dot("sigma_2"))
+# capital evolution (display after {eq}`equation3`)
+m.growth = ((1 / p.zeta) * sp.log(1 + p.zeta * D2) + p.nu_k * Z1 - p.iota_k
+            - q**2 / 2 * m.norm2("sigma_k") * sp.exp(Z2)
+            + sp.exp(Z2 / 2) * m.dot("sigma_k"))
+# consumption and the resource constraint {eq}`equation3`
+m.consumption = sp.log(D1)
+m.constraint = p.alpha - D1 - D2
+
+# the 13 scenarios behind the three figures
+SCENARIOS = (
+    [{"id": "base", "gamma": 8.001, "rho": 1.001,
+      "alpha_annual": ALPHA_BASE, "figure": "price_quantiles"}]
+    + [{"id": f"invk_r{r}", "gamma": 8.0, "rho": r,
+        "alpha_annual": ALPHA_ANNUAL[r], "figure": "invk_expo"}
+       for r in [0.67, 1.001, 1.5]]
+    + [{"id": f"g{g}_r{r}", "gamma": g, "rho": r,
+        "alpha_annual": ALPHA_ANNUAL[r], "figure": "six_panel"}
+       for g in [1.001, 4.001, 8.001] for r in [0.67, 1.001, 1.5]]
+)"""
+
+SOLVE = r"""# ================================ SOLVE =================================
+# Each scenario: second-order small-noise expansion via uncertain_expansion
+# (order 0/1/2 and the N^0 change of measure inside the engine), then
+# Borovicka-Hansen exposure/price elasticities from the solution.
+T, GROWTH_SHOCK, CAPITAL_SHOCK = 160, 1, 0
+
+def solve_scenario(sc):
+    alpha_q = sc["alpha_annual"] / 4.0
+    params = dict(PARAMS)
+    params.update({"gamma": float(sc["gamma"]), "rho": float(sc["rho"]),
+                   "alpha": alpha_q})
+    # rough steady-state starting values, in the model's own terms
+    start = {"D2": 0.019, "D1": max(alpha_q - 0.019, 1e-3),
+             "Z2": float(np.log(6.3e-6)), "growth": 0.005}
+    return m.solve(params, start=start)
+
+results = {}
+t0 = time.time()
+for sc in SCENARIOS:
+    t1 = time.time()
+    with contextlib.redirect_stdout(io.StringIO()):   # engine iteration log
+        sol = solve_scenario(sc)
+    if sc["figure"] == "price_quantiles":
+        for quantile in (0.1, 0.5, 0.9):
+            for name, shock in (("growth", GROWTH_SHOCK),
+                                ("capital", CAPITAL_SHOCK)):
+                results[f"{sc['id']}/price_{name}_q{quantile}"] = \
+                    sol.price_elasticity(shock, T, quantile)
+    elif sc["figure"] == "invk_expo":
+        invk = sol.increment(sp.log(m["D2"]))
+        results[f"{sc['id']}/expo_invk_growth_q0.5"] = \
+            sol.exposure_elasticity(GROWTH_SHOCK, T, process=invk)
+    else:
+        results[f"{sc['id']}/expo_growth_q0.5"] = \
+            sol.exposure_elasticity(GROWTH_SHOCK, T)
+        results[f"{sc['id']}/price_growth_q0.5"] = \
+            sol.price_elasticity(GROWTH_SHOCK, T)
+    print(f"{sc['id']}: solved in {time.time() - t1:.1f}s", flush=True)
+print(f"{len(SCENARIOS)} scenarios in {time.time() - t0:.0f}s")"""
+
+FIG1 = r"""# ============================ FIGURE 11.1 ===============================
+# Consumption exposure (left) and price (right) elasticities for the
+# growth-rate shock; rows vary gamma, curves vary rho (alpha paired to rho).
+sns.set_style("darkgrid")
+yrs = np.arange(1, 161) / 4
+gammas, rhos = [1.001, 4.001, 8.001], [0.67, 1.001, 1.5]
+fig, axes = plt.subplots(3, 2, figsize=(10, 10), sharex=True)
+for i, g in enumerate(gammas):
+    for r in rhos:
+        axes[i, 0].plot(yrs, results[f"g{g}_r{r}/expo_growth_q0.5"], label=fr"$\rho={r}$")
+        axes[i, 1].plot(yrs, results[f"g{g}_r{r}/price_growth_q0.5"])
+    axes[i, 0].set_ylabel(fr"$\gamma={g:.0f}$")
+axes[0, 0].set_title("exposure elasticity"); axes[0, 1].set_title("price elasticity")
+axes[0, 0].legend(frameon=False)
+for ax in axes[-1]: ax.set_xlabel("years")
+plt.tight_layout(); plt.show()"""
+
+FIG2 = r"""# ============================ FIGURE 11.2 ===============================
+# Investment-capital exposure elasticity, growth-rate shock, gamma = 8.
+# The sign of the initial response flips with rho relative to 1 (IES = 1).
+plt.figure(figsize=(6, 4))
+for r in rhos:
+    plt.plot(yrs, results[f"invk_r{r}/expo_invk_growth_q0.5"], label=fr"$\rho={r}$")
+plt.axhline(0, color="k", lw=0.6)
+plt.xlabel("years"); plt.legend(frameon=False); plt.tight_layout(); plt.show()"""
+
+FIG3 = r"""# ============================ FIGURE 11.3 ===============================
+# Price elasticities at the 0.1 / 0.5 / 0.9 stochastic-volatility quantiles,
+# growth and capital shocks; gamma = 8, rho = 1.
+fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharey=True)
+for name, ax in [("growth", axes[0]), ("capital", axes[1])]:
+    for quantile in [0.1, 0.5, 0.9]:
+        ax.plot(yrs, results[f"base/price_{name}_q{quantile}"], label=f"q = {quantile}")
+    ax.set_title(f"{name} shock"); ax.set_xlabel("years")
+axes[0].legend(frameon=False)
+plt.tight_layout(); plt.show()"""
 
 ANALYSIS = r"""# Analysis
 
@@ -94,135 +203,27 @@ capital shock, carry the large prices.
 quarterly: annual drifts ÷ 4, volatilities $=\sqrt3\,\times$ the
 monthly-calibrated vectors, $\beta = e^{-0.01/4}$.
 
-**Checks.** The curves match the run behind the published figures to
-$10^{-12}$–$10^{-5}$ relative (the residual is that run's iteration
-tolerance), and substituting the solved policy and value function back into
-the chapter's exact recursions leaves residuals of third order, as a
-second-order expansion should. More detail:
+**Checks.** The solver is the expansion engine itself, imported unmodified
+from `src/` (RiskUncertaintyValue, branch `Planners_with_External`, commit
+`09ca5df`). The curves match the runs behind the published figures; an
+independent direct implementation of the same expansion (`model.py` /
+`solve.py` in this repository) agrees with the engine at tight tolerance
+and is kept for cross-checking. More detail:
 [`README.md`](https://github.com/as7391746/QuantMFR-Colab)."""
-
-RUN_BLOCK = '''# ---- run the 13 scenarios behind Figures 11.1-11.3 ----
-def solve_scenario(sc, params=PARAMS):
-    p = model(sc, params)
-    o0 = order0(p)
-    o1 = order1(p, o0)
-    o2 = order2(p, o0, o1)
-    return p, elastic_build(p, o0, o1, o2)
-
-t0 = time.time()
-results = {}
-for sc in SCENARIOS:
-    p, inc = solve_scenario(sc)
-    T = p["T"]
-    if sc["figure"] == "price_quantiles":
-        for q in p["quantiles"]:
-            for name, shock in [("growth", p["growth_shock"]),
-                                ("capital", p["capital_shock"])]:
-                results[f"{sc['id']}/price_{name}_q{q}"] = \\
-                    price_elasticity(inc, T, shock, percentile=q)
-    elif sc["figure"] == "invk_expo":
-        results[f"{sc['id']}/expo_invk_growth_q0.5"] = \\
-            exposure_elasticity(inc, T, p["growth_shock"], process="invk")
-    else:
-        results[f"{sc['id']}/expo_growth_q0.5"] = \\
-            exposure_elasticity(inc, T, p["growth_shock"])
-        results[f"{sc['id']}/price_growth_q0.5"] = \\
-            price_elasticity(inc, T, p["growth_shock"])
-print(f"{len(SCENARIOS)} scenarios solved in {time.time()-t0:.2f}s")'''
-
-FIG1 = r'''# ============================ FIGURE 11.1 ===============================
-# Consumption exposure (left) and price (right) elasticities for the
-# growth-rate shock; rows vary gamma, curves vary rho (alpha paired to rho).
-sns.set_style("darkgrid")
-yrs = np.arange(1, 161) / 4
-gammas, rhos = [1.001, 4.001, 8.001], [0.67, 1.001, 1.5]
-fig, axes = plt.subplots(3, 2, figsize=(10, 10), sharex=True)
-for i, g in enumerate(gammas):
-    for r in rhos:
-        axes[i, 0].plot(yrs, results[f"g{g}_r{r}/expo_growth_q0.5"], label=fr"$\rho={r}$")
-        axes[i, 1].plot(yrs, results[f"g{g}_r{r}/price_growth_q0.5"])
-    axes[i, 0].set_ylabel(fr"$\gamma={g:.0f}$")
-axes[0, 0].set_title("exposure elasticity"); axes[0, 1].set_title("price elasticity")
-axes[0, 0].legend(frameon=False)
-for ax in axes[-1]: ax.set_xlabel("years")
-plt.tight_layout(); plt.show()'''
-
-FIG2 = r'''# ============================ FIGURE 11.2 ===============================
-# Investment-capital exposure elasticity, growth-rate shock, gamma = 8.
-# The sign of the initial response flips with rho relative to 1 (IES = 1).
-plt.figure(figsize=(6, 4))
-for r in rhos:
-    plt.plot(yrs, results[f"invk_r{r}/expo_invk_growth_q0.5"], label=fr"$\rho={r}$")
-plt.axhline(0, color="k", lw=0.6)
-plt.xlabel("years"); plt.legend(frameon=False); plt.tight_layout(); plt.show()'''
-
-FIG3 = r'''# ============================ FIGURE 11.3 ===============================
-# Price elasticities at the 0.1 / 0.5 / 0.9 stochastic-volatility quantiles,
-# growth and capital shocks; gamma = 8, rho = 1.
-fig, axes = plt.subplots(1, 2, figsize=(11, 4), sharey=True)
-for name, ax in [("growth", axes[0]), ("capital", axes[1])]:
-    for q in [0.1, 0.5, 0.9]:
-        ax.plot(yrs, results[f"base/price_{name}_q{q}"], label=f"q = {q}")
-    ax.set_title(f"{name} shock"); ax.set_xlabel("years")
-axes[0].legend(frameon=False)
-plt.tight_layout(); plt.show()'''
 
 
 def main():
-    model_body = "\n\n".join(b for _, b in sections("model.py"))
-    solve_secs = sections("solve.py")
-
-    cell_model = (
-        "# ================================ MODEL =================================\n"
-        "# Chapter 11 AK economy, quarterly, in the chapter's own notation.\n"
-        "# States {eq}`equation2`; capital evolution; resource constraint\n"
-        "# {eq}`equation3`; preferences {eq}`value_recur5`/{eq}`value_risk6`;\n"
-        "# planner FOC {eq}`equation4`. Parameter provenance in the comments\n"
-        "# (HKT 2024 annual values, converted to quarterly).\n"
-        "import time\n"
-        "import numpy as np\n"
-        "import matplotlib.pyplot as plt\n"
-        "import seaborn as sns\n"
-        "from scipy.optimize import brentq\n"
-        "from scipy.stats import norm\n\n"
-        + model_body)
-
-    cell_solve = (
-        "# ================================ SOLVE =================================\n"
-        "# Second-order small-noise expansion (appendix B, approach one):\n"
-        "#   order 0: deterministic steady state; rho=1 reproduces the chapter's\n"
-        "#            closed form D2* = ((beta-1)+beta*alpha)/(beta+(1-beta)*zeta)\n"
-        "#   order 1: 4x4 linear system for (upsilon_1, d_1); the recursive-utility\n"
-        "#            change of measure N^0 shifts the shock mean by\n"
-        "#            mu0 = (1-gamma)*Sigma_w   (appendix `first_recursive_update`)\n"
-        "#   order 2: affine in its 8 coefficients -> solved exactly by probing\n"
-        "#            (appendix `second_recursive_update`, all under N^0)\n"
-        "# Pricing: every log increment is linear-quadratic in (X1, X2, W); Gaussian\n"
-        "# integrals keep the class closed, so Borovicka-Hansen (2014) elasticities\n"
-        "# follow from one backward recursion (no simulation). SDF as in the runs\n"
-        "# behind the published figures (normalized quadratic N-tilde).\n\n"
-        + get(solve_secs, "Quadratic-form container") + "\n\n"
-        + get(solve_secs, "Order 0") + "\n\n"
-        + get(solve_secs, "Order 1") + "\n\n"
-        + get(solve_secs, "Order 2") + "\n\n"
-        + get(solve_secs, "LQ") + "\n\n"
-        + get(solve_secs, "Assemble") + "\n\n"
-        + get(solve_secs, "Elasticities") + "\n\n"
-        + RUN_BLOCK
-    )
-
     cells = [md(TITLE), md("# Codes"),
-             code(cell_model), code(cell_solve),
+             code(SETUP), code(MODEL), code(SOLVE),
              code(FIG1), code(FIG2), code(FIG3),
              md(ANALYSIS)]
-
     nb = {"nbformat": 4, "nbformat_minor": 5,
           "metadata": {"colab": {"name": "ak-elasticities-chapter.ipynb"},
                        "kernelspec": {"name": "python3",
                                       "display_name": "Python 3"}},
           "cells": cells}
     json.dump(nb, open("colab.ipynb", "w"), indent=1)
-    print(f"colab.ipynb: {len(cells)} cells (5 code)")
+    print(f"colab.ipynb: {len(cells)} cells (6 code)")
 
 
 if __name__ == "__main__":
