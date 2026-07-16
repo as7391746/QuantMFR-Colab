@@ -30,9 +30,11 @@ import numpy as np
 import sympy as sp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-_LOCAL_ENGINE = os.path.join(HERE, "engine")
-if os.path.isdir(_LOCAL_ENGINE):          # self-contained deployment
-    sys.path.insert(0, _LOCAL_ENGINE)
+for _candidate in (os.path.join(HERE, "engine"),                  # local copy
+                   os.path.join(os.path.dirname(HERE), "src")):   # repo-root src/
+    if os.path.isdir(_candidate):
+        sys.path.insert(0, _candidate)
+        break
 else:                                     # inside the bookshelf: frozen snapshot
     sys.path.insert(0, os.path.dirname(HERE))
     from _tools.paths import engine as _engine_path
