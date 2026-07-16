@@ -1,6 +1,6 @@
 """The Chapter 11 AK economy through the user-facing expansion layer:
 declare the chapter's equations in the chapter's notation, feed the
-appendix's quarterly parameter table, and generate Figures 11.1-11.3.
+appendix's quarterly parameters, and generate Figures 11.1-11.3.
 
 Run:  python ak_example.py           (all 13 solves + 3 figures)
       python ak_example.py base      (the single base solve, quick check)
@@ -12,32 +12,30 @@ import time
 import numpy as np
 import sympy as sp
 
-from expansion import Model, annual_to_quarterly
+from expansion import Model
 
 # ---------------------------------------------------------------------------
-# Parameters: the appendix table (quarterly), preferences per scenario.
-# The annual -> quarterly conversions, stated explicitly:
+# Parameters: the quarterly values of the chapter appendix.
 # ---------------------------------------------------------------------------
 
-CONVERTED = annual_to_quarterly(
-    rates={"iota_k": 0.04, "nu_k": 0.04, "nu_1": 0.056, "nu_2": 0.194},
-    volatilities_monthly={"sigma_k": [0.92, 0.40, 0.0],
-                          "sigma_1": [0.0, 5.70, 0.0],
-                          "sigma_2": [0.0, 0.0, 0.00031]},
-    ratios={"zeta": 8.0},
-    verbose=False,
-)
-
+SQRT3 = np.sqrt(3.0)
 PARAMS = {
-    "beta": np.exp(-0.01 / 4),      # exp(-delta/4), annual delta = 0.01
-    "mu_2": 6.3e-6,                 # mean of exp(Z2): a level, no conversion
-    **CONVERTED,
+    "beta": np.exp(-0.0025),          # quarterly discount factor
+    "zeta": 32.0,                     # adjustment-cost curvature
+    "iota_k": 0.01,                   # capital drift constant
+    "nu_k": 0.01,                     # capital loading on Z1
+    "nu_1": 0.014,                    # Z1 mean reversion
+    "nu_2": 0.0485,                   # Z2 mean reversion
+    "mu_2": 6.3e-6,                   # central tendency of exp(Z2)
+    "sigma_k": SQRT3 * np.array([0.92, 0.40, 0.0]),
+    "sigma_1": SQRT3 * np.array([0.0, 5.70, 0.0]),
+    "sigma_2": SQRT3 * np.array([0.0, 0.0, 0.00031]),
 }
 
-# productivity alpha is paired with rho so that all rho share the same
-# steady-state growth (annual values; quarterly = /4)
-ALPHA_ANNUAL = {0.67: 0.082, 1.001: 0.092, 1.5: 0.108}
-ALPHA_BASE = 0.0922
+# productivity alpha is paired with rho so that all specifications share
+# the same steady-state growth; the base case uses 0.02305
+ALPHA = {0.67: 0.0205, 1.001: 0.023, 1.5: 0.027}
+ALPHA_BASE = 0.02305
 
 # ---------------------------------------------------------------------------
 # Model: the chapter's equations, in the chapter's notation.
@@ -80,18 +78,18 @@ GROWTH_SHOCK, CAPITAL_SHOCK = 1, 0
 
 SCENARIOS = (
     [{"id": "base", "gamma": 8.001, "rho": 1.001,
-      "alpha_annual": ALPHA_BASE, "figure": "price_quantiles"}]
+      "alpha": ALPHA_BASE, "figure": "price_quantiles"}]
     + [{"id": f"invk_r{r}", "gamma": 8.0, "rho": r,
-        "alpha_annual": ALPHA_ANNUAL[r], "figure": "invk_expo"}
+        "alpha": ALPHA[r], "figure": "invk_expo"}
        for r in [0.67, 1.001, 1.5]]
     + [{"id": f"g{g}_r{r}", "gamma": g, "rho": r,
-        "alpha_annual": ALPHA_ANNUAL[r], "figure": "six_panel"}
+        "alpha": ALPHA[r], "figure": "six_panel"}
        for g in [1.001, 4.001, 8.001] for r in [0.67, 1.001, 1.5]]
 )
 
 
 def solve_scenario(m, sc):
-    alpha_quarterly = sc["alpha_annual"] / 4.0
+    alpha_quarterly = sc["alpha"]
     params = dict(PARAMS)
     params.update({"gamma": float(sc["gamma"]), "rho": float(sc["rho"]),
                    "alpha": alpha_quarterly})

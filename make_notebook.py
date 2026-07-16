@@ -19,8 +19,8 @@ TITLE = r"""# Chapter 11: Figures 11.1–11.3
 
 The AK production economy of Chapter 11, declared in the chapter's notation
 and solved with the expansion engine (`uncertain_expansion`, imported
-directly from this repository's `src/`). Parameters follow the appendix
-table and Hansen–Khorrami–Tourre (2024), converted to quarterly.
+directly from this repository's `src/`). Parameters are the quarterly
+values of the chapter appendix.
 
 ![method](https://raw.githubusercontent.com/as7391746/QuantMFR-Colab/main/assets/method.png)
 
@@ -82,28 +82,24 @@ MODEL = r"""# ================================ MODEL ===========================
 #   - recursive preferences {eq}`value_recur5`/{eq}`value_risk6` (handled
 #     inside the engine; only beta, rho, gamma appear here).
 #
-# Everything is QUARTERLY. Conversion from the annual numbers in the
-# appendix table / HKT 2024: rates and flows are divided by 4; volatility
-# vectors are the monthly calibration scaled by sqrt(3) (variances add
-# across the three months of a quarter).
+# All parameter values are quarterly, as in the chapter appendix.
 SQRT3 = np.sqrt(3.0)
 PARAMS = {
-    "beta": np.exp(-0.01 / 4),        # discount factor: delta = 0.01/yr -> exp(-0.01/4)
-    "zeta": 32.0,                     # adjustment-cost curvature: 8/yr x 4 (I/K is a quarterly ratio)
-    "iota_k": 0.01,                   # capital drift constant: 0.04/yr / 4
-    "nu_k": 0.01,                     # capital loading on Z1:   0.04/yr / 4
-    "nu_1": 0.014,                    # Z1 mean reversion:       0.056/yr / 4  (autocorr 0.986)
-    "nu_2": 0.0485,                   # Z2 mean reversion:       0.194/yr / 4
-    "mu_2": 6.3e-6,                   # central tendency of exp(Z2): a level, no conversion
-    "sigma_k": SQRT3 * np.array([0.92, 0.40, 0.0]),     # capital shock loadings (monthly x sqrt(3))
+    "beta": np.exp(-0.0025),          # quarterly discount factor
+    "zeta": 32.0,                     # adjustment-cost curvature
+    "iota_k": 0.01,                   # capital drift constant
+    "nu_k": 0.01,                     # capital loading on Z1
+    "nu_1": 0.014,                    # Z1 mean reversion (autocorrelation 0.986)
+    "nu_2": 0.0485,                   # Z2 mean reversion
+    "mu_2": 6.3e-6,                   # central tendency of exp(Z2)
+    "sigma_k": SQRT3 * np.array([0.92, 0.40, 0.0]),     # capital shock loadings
     "sigma_1": SQRT3 * np.array([0.0, 5.70, 0.0]),      # growth-state loadings
     "sigma_2": SQRT3 * np.array([0.0, 0.0, 0.00031]),   # volatility-state loadings
 }
-# Productivity alpha is stated annually and paired with rho so that all
-# rho share the same 1.9%/yr steady-state growth (HKT 2024, Table 3);
-# quarterly alpha = annual / 4. The base case uses 0.0922.
-ALPHA_ANNUAL = {0.67: 0.082, 1.001: 0.092, 1.5: 0.108}
-ALPHA_BASE = 0.0922
+# Productivity alpha is paired with rho so that all specifications share
+# the same steady-state growth. The base case uses 0.02305.
+ALPHA = {0.67: 0.0205, 1.001: 0.023, 1.5: 0.027}
+ALPHA_BASE = 0.02305
 
 # Declare the model. m["X"] gives the symbol for a variable; m.p.name gives
 # a parameter symbol; m.W are next-period shocks; m.q is the noise scale;
@@ -139,15 +135,15 @@ m.constraint = p.alpha - D1 - D2
 #   invk_r*   (gamma = 8)       -> Fig 11.2 (investment-capital exposure)
 #   g*_r*     (3x3 gamma x rho) -> Fig 11.1 (consumption, 6-panel grid)
 # gamma/rho carry small offsets from the degenerate values (8.001 for 8,
-# 1.001 for 1), as in the runs behind the published figures.
+# 1.001 for 1) to stay clear of the limiting formulas.
 SCENARIOS = (
     [{"id": "base", "gamma": 8.001, "rho": 1.001,
-      "alpha_annual": ALPHA_BASE, "figure": "price_quantiles"}]
+      "alpha": ALPHA_BASE, "figure": "price_quantiles"}]
     + [{"id": f"invk_r{r}", "gamma": 8.0, "rho": r,
-        "alpha_annual": ALPHA_ANNUAL[r], "figure": "invk_expo"}
+        "alpha": ALPHA[r], "figure": "invk_expo"}
        for r in [0.67, 1.001, 1.5]]
     + [{"id": f"g{g}_r{r}", "gamma": g, "rho": r,
-        "alpha_annual": ALPHA_ANNUAL[r], "figure": "six_panel"}
+        "alpha": ALPHA[r], "figure": "six_panel"}
        for g in [1.001, 4.001, 8.001] for r in [0.67, 1.001, 1.5]]
 )"""
 
@@ -169,7 +165,7 @@ T, GROWTH_SHOCK, CAPITAL_SHOCK = 160, 1, 0
 
 def solve_scenario(sc):
     # per-scenario parameters: preferences and the rho-paired alpha
-    alpha_q = sc["alpha_annual"] / 4.0
+    alpha_q = sc["alpha"]
     params = dict(PARAMS)
     params.update({"gamma": float(sc["gamma"]), "rho": float(sc["rho"]),
                    "alpha": alpha_q})
@@ -274,14 +270,12 @@ continuation value makes the growth-rate shock, rather than the direct
 capital shock, carry the large prices.
 
 **Calibration.** When $\rho$ varies, the productivity $\alpha$ is re-paired
-(0.082 / 0.092 / 0.108 annually) so all specifications share the same
-1.9%/yr steady-state growth (HKT 2024, Table 3). All parameters here are
-quarterly: annual drifts ÷ 4, volatilities $=\sqrt3\,\times$ the
-monthly-calibrated vectors, $\beta = e^{-0.01/4}$.
+(0.0205 / 0.023 / 0.027) so all specifications share the same steady-state
+growth. All parameter values are quarterly, as in the chapter appendix.
 
 **Checks.** The solver is the expansion engine itself, imported unmodified
 from `src/` (RiskUncertaintyValue, branch `Planners_with_External`, commit
-`09ca5df`), and the curves match the runs behind the published figures.
+`09ca5df`), and the resulting figures line up with the chapter's.
 More detail: [`README.md`](https://github.com/as7391746/QuantMFR-Colab)."""
 
 

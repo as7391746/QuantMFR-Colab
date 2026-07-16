@@ -6,9 +6,9 @@
 
 A replication of the three AK-economy shock-elasticity figures of *Risk,
 Uncertainty, and Value* Chapter 11: the model is declared in the chapter's
-notation with the parameters of the chapter appendix (converted
-annual→quarterly explicitly), and solved with the expansion engine
-`uncertain_expansion` imported directly from this repository.
+notation with the quarterly parameters of the chapter appendix, and solved
+with the expansion engine `uncertain_expansion` imported directly from
+this repository.
 
 Model — solve — plot:
 

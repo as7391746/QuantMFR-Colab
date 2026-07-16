@@ -268,28 +268,3 @@ class Solution:
         return price_elasticity(
             inc, self.log_sdf, self.raw["X1_tp1"], self.raw["X2_tp1"], T,
             shock=shock, percentile=quantile).flatten()
-
-
-def annual_to_quarterly(rates=None, volatilities_monthly=None, ratios=None,
-                        verbose=True):
-    """Explicit time-step conversion. Drifts and flow rates divide by 4;
-    a monthly-calibrated volatility vector scales by sqrt(3); parameters
-    stated as per-quarter ratios multiply the corresponding annual
-    curvature by 4 (e.g. an adjustment-cost zeta on I/K)."""
-    out = {}
-    rows = []
-    for name, v in (rates or {}).items():
-        out[name] = np.asarray(v, dtype=float) / 4.0
-        rows.append((name, v, out[name], "annual rate / 4"))
-    for name, v in (volatilities_monthly or {}).items():
-        out[name] = np.sqrt(3.0) * np.asarray(v, dtype=float)
-        rows.append((name, v, out[name], "monthly vol x sqrt(3)"))
-    for name, v in (ratios or {}).items():
-        out[name] = np.asarray(v, dtype=float) * 4.0
-        rows.append((name, v, out[name], "annual curvature x 4"))
-    if verbose and rows:
-        print(f"{'parameter':<12}{'input':>22}{'quarterly':>22}   rule")
-        for name, vin, vout, rule in rows:
-            print(f"{name:<12}{str(vin):>22}{str(np.round(vout, 6)):>22}"
-                  f"   {rule}")
-    return out
