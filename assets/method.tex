@@ -33,14 +33,14 @@
    \scriptsize $\nu_1,\nu_2,\mu_2,\sigma_\cdot$ (appendix)};
 
 \node[order, right=26pt of model] (o0)
-  {\textbf{order 0}\\[1pt]\scriptsize steady state $(D_2^0, v^0)$\\
-   \scriptsize $\rho{=}1$: closed form $D_2^*$};
+  {\textbf{order 0}\\[1pt]\scriptsize deterministic\\
+   \scriptsize steady state $(D_2^0, v^0)$};
 \node[order, right=18pt of o0] (o1)
-  {\textbf{order 1}\\[1pt]\scriptsize $(\upsilon_1, d_1)$: $4{\times}4$ linear\\
+  {\textbf{order 1}\\[1pt]\scriptsize linear responses $(\upsilon_1, d_1)$\\
    \scriptsize $\mu^0=(1{-}\gamma_o)\,\Sigma_w$};
 \node[order, right=18pt of o1] (o2)
-  {\textbf{order 2}\\[1pt]\scriptsize $(v^2, d^2)$: 8 coefficients\\
-   \scriptsize solved exactly by probing};
+  {\textbf{order 2}\\[1pt]\scriptsize quadratic corrections $(v^2, d^2)$\\
+   \scriptsize expectations under $N^0$};
 
 \node[stage, right=26pt of o2, minimum width=100pt] (price)
   {\textbf{PRICING}\\[1pt]
@@ -54,7 +54,8 @@
 \node[draw=black!40, dashed, rounded corners=3pt, inner sep=7pt,
       fill=paper, fit=(o0)(o1)(o2)] (solvebox) {};
 \end{scope}
-\node[lbl, anchor=south] at (solvebox.north) {SOLVE — appendix B, ``approach one''};
+\node[lbl, anchor=south] at (solvebox.north)
+  {SOLVE — \texttt{uncertain\_expansion}, the book's expansion code (``approach one'')};
 
 \draw[arr] (model) -- (solvebox.west|-model);
 \draw[arr] (o0) -- (o1);
@@ -69,9 +70,9 @@
 \draw[arr, maroon] (n0) -- ($(o1.south)!0.35!(o2.south)$);
 
 % ---------- cell mapping ----------
-\node[cell, anchor=north] at ($(model.south)+(0,-4pt)$)   {cell 1};
-\node[cell, anchor=north] at ($(solvebox.south)+(0,-4pt)$){cell 2};
-\node[cell, anchor=north] at ($(price.south)+(0,-4pt)$)   {cell 2};
-\node[cell, anchor=north] at ($(figs.south)+(0,-4pt)$)    {cells 3--5};
+\node[cell, anchor=north] at ($(model.south)+(0,-4pt)$)   {cell 2};
+\node[cell, anchor=north] at ($(solvebox.south)+(0,-4pt)$){cell 3};
+\node[cell, anchor=north] at ($(price.south)+(0,-4pt)$)   {cell 3};
+\node[cell, anchor=north] at ($(figs.south)+(0,-4pt)$)    {cells 4--6};
 \end{tikzpicture}
 \end{document}

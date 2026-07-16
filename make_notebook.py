@@ -16,22 +16,26 @@ code = lambda s: {"cell_type": "code", "metadata": {}, "outputs": [],
 
 TITLE = r"""# Chapter 11: Figures 11.1–11.3
 
-The AK production economy of Chapter 11, solved with the book's expansion
-code (`uncertain_expansion`), used exactly as the book's *Uncertainty
-Expansion — Computation Process* appendix uses it. Parameters are the
-quarterly values of the chapter appendix.
+Model — solve — plot. The **model** is the Chapter 11 AK production
+economy, stated in the chapter's notation with the quarterly parameters of
+the chapter appendix. The **solve** step is the book's expansion code
+(`uncertain_expansion`), fetched from the RiskUncertaintyValue repository
+and called exactly as the book's *Uncertainty Expansion — Computation
+Process* appendix calls it. The **plots** are Figures 11.1–11.3, built
+from Borovička–Hansen shock elasticities of the solution.
 
 ![method](https://raw.githubusercontent.com/as7391746/QuantMFR-Colab/main/assets/method.png)
 
-*The pipeline and where each step lives in this notebook. Risk aversion is
-rescaled with the perturbation ($\gamma-1=(\gamma_o-1)/\mathsf q$), so the
-recursive-utility change of measure $N^0$ already matters at first order: it
-shifts the shock mean to $\mu^0$, which is what generates the shock-price
-elasticities in Figures 11.1 and 11.3.*
+*The pipeline, and the notebook cell where each step lives. Risk aversion
+is rescaled with the perturbation ($\gamma-1=(\gamma_o-1)/\mathsf q$), so
+the recursive-utility change of measure $N^0$ already matters at first
+order: it shifts the shock mean to $\mu^0$, which is what generates the
+shock-price elasticities in Figures 11.1 and 11.3.*
 
 **Runtime → Run all** (~5 minutes on a standard Colab runtime: a shallow
 clone, then thirteen expansion solves of ~10–45 s each). To experiment,
-edit the parameters or `COMPARISONS` and re-run."""
+edit the parameters in `create_args` or the `COMPARISONS` list and
+re-run."""
 
 SETUP = """# ================================ SETUP =================================
 # Fetch the book's expansion code (the RiskUncertaintyValue repository) and
