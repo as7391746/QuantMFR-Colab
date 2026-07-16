@@ -2,28 +2,23 @@
 
 **One-click reproduction:**
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/as7391746/QuantMFR-Colab/blob/main/colab.ipynb)
-(runs on your own Colab runtime; ~3 minutes for the thirteen expansion solves)
+(runs on your own Colab runtime; ~5 minutes for the thirteen expansion solves)
 
 A replication of the three AK-economy shock-elasticity figures of *Risk,
-Uncertainty, and Value* Chapter 11: the model is declared in the chapter's
-notation with the quarterly parameters of the chapter appendix, and solved
-with the expansion engine `uncertain_expansion` imported directly from
-this repository.
+Uncertainty, and Value* Chapter 11. Model — solve — plot: the model is
+stated in the chapter's notation with the quarterly parameters of the
+chapter appendix, and solved with the book's expansion code
+(`uncertain_expansion`), fetched directly from the RiskUncertaintyValue
+repository and called exactly as the book's *Uncertainty Expansion —
+Computation Process* appendix calls it.
 
-Model — solve — plot:
-
-- `colab.ipynb` — the deliverable: model declaration (chapter notation,
-  appendix parameters), engine solve, one cell per figure. Regenerated
-  from `make_notebook.py`.
-- `src/` — the expansion engine, an unmodified snapshot of
-  RiskUncertaintyValue (branch `Planners_with_External`, commit `09ca5df`),
-  in the same `src/` layout as the upstream repository.
-- `expansion/` — a small declaration layer over the engine (`Model`,
-  parameter handling, automatic steady-state starting values, elasticity
-  requests), plus worked examples (`ak_example.py`, `habit_example.py`)
-  and a direct-import test notebook (`expansion_test.ipynb`).
+- `colab.ipynb` — the deliverable. Regenerated from `make_notebook.py`.
 - `assets/` — the pipeline diagram in the notebook's title cell
   (`method.tex` is the TikZ source).
+- `src/`, `expansion/` — supplementary: a pinned copy of the expansion
+  code and a small declaration layer over it, with worked examples and a
+  test notebook (`expansion/expansion_test.ipynb`). The main notebook does
+  not use these.
 
 > **Status**: internal demonstration mirror of the QuantMFR book's
 > (private) companion material, published here temporarily so the demo is
