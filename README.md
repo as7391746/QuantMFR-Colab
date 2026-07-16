@@ -15,10 +15,6 @@ Computation Process* appendix calls it.
 - `colab.ipynb` — the deliverable. Regenerated from `make_notebook.py`.
 - `assets/` — the pipeline diagram in the notebook's title cell
   (`method.tex` is the TikZ source).
-- `src/`, `expansion/` — supplementary: a pinned copy of the expansion
-  code and a small declaration layer over it, with worked examples and a
-  test notebook (`expansion/expansion_test.ipynb`). The main notebook does
-  not use these.
 
 > **Status**: internal demonstration mirror of the QuantMFR book's
 > (private) companion material, published here temporarily so the demo is
