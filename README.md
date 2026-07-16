@@ -10,8 +10,11 @@ notation with the parameters of the chapter appendix (converted
 annual→quarterly explicitly), and solved with the expansion engine
 `uncertain_expansion` imported directly from this repository.
 
-- `colab.ipynb` — the deliverable: model declaration, engine solve, one
-  cell per figure. Regenerated from `make_notebook.py`.
+Model — solve — plot:
+
+- `colab.ipynb` — the deliverable: model declaration (chapter notation,
+  appendix parameters), engine solve, one cell per figure. Regenerated
+  from `make_notebook.py`.
 - `src/` — the expansion engine, an unmodified snapshot of
   RiskUncertaintyValue (branch `Planners_with_External`, commit `09ca5df`),
   in the same `src/` layout as the upstream repository.
@@ -19,9 +22,6 @@ annual→quarterly explicitly), and solved with the expansion engine
   parameter handling, automatic steady-state starting values, elasticity
   requests), plus worked examples (`ak_example.py`, `habit_example.py`)
   and a direct-import test notebook (`expansion_test.ipynb`).
-- `model.py`, `solve.py` — an independent direct implementation of the
-  same second-order expansion, kept for cross-checking: it agrees with the
-  engine at tight tolerance across all 27 elasticity curves.
 - `assets/` — the pipeline diagram in the notebook's title cell
   (`method.tex` is the TikZ source).
 

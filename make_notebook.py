@@ -2,10 +2,9 @@
 """Generate colab.ipynb — Chapter 11, Figures 11.1-11.3.
 
 Layout: two sections. Codes (setup, model, solve, one cell per figure) and
-Analysis. The solve step imports the expansion engine (uncertain_expansion)
-directly from this repository's src/, through the declaration layer in
-expansion/. The independent direct implementation (model.py / solve.py in
-the repository root) is kept for cross-checking and is not used here.
+Analysis. Model - solve - plot: the model is declared in the chapter's
+notation, the solve step imports the expansion engine (uncertain_expansion)
+directly from this repository's src/, and the figure cells plot.
 """
 
 import json
@@ -205,11 +204,8 @@ monthly-calibrated vectors, $\beta = e^{-0.01/4}$.
 
 **Checks.** The solver is the expansion engine itself, imported unmodified
 from `src/` (RiskUncertaintyValue, branch `Planners_with_External`, commit
-`09ca5df`). The curves match the runs behind the published figures; an
-independent direct implementation of the same expansion (`model.py` /
-`solve.py` in this repository) agrees with the engine at tight tolerance
-and is kept for cross-checking. More detail:
-[`README.md`](https://github.com/as7391746/QuantMFR-Colab)."""
+`09ca5df`), and the curves match the runs behind the published figures.
+More detail: [`README.md`](https://github.com/as7391746/QuantMFR-Colab)."""
 
 
 def main():
