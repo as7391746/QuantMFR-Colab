@@ -32,7 +32,7 @@ previous solution's steady state. The **plots** are the six habit figures:
 investment-capital exposure elasticities and consumption price
 elasticities, internal versus external habit, $\gamma = 4$ and $8$.
 
-**Runtime → Run all** (~45 minutes on a standard Colab runtime: 40
+**Runtime → Run all** (~15 minutes on a standard Colab runtime: 40
 expansion solves, warm-started along a chain). To reproduce a single
 figure, keep only its (habit, $\gamma$) block in `COMPARISONS` and
 re-run."""
