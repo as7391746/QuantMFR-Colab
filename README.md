@@ -1,18 +1,24 @@
-# QuantMFR Chapter 11 — Figures 11.1–11.3 replication
+# QuantMFR Chapter 11 — figure replication
 
 **One-click reproduction:**
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/as7391746/QuantMFR-Colab/blob/main/colab.ipynb)
-(runs on your own Colab runtime; ~5 minutes for the thirteen expansion solves)
+- Figures 11.1–11.3 (baseline AK economy):
+  [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/as7391746/QuantMFR-Colab/blob/main/colab.ipynb)
+- Figures 11.4–11.9 (habit preferences):
+  [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/as7391746/QuantMFR-Colab/blob/main/colab_habit.ipynb)
 
-A replication of the three AK-economy shock-elasticity figures of *Risk,
-Uncertainty, and Value* Chapter 11. Model — solve — plot: the model is
-stated in the chapter's notation with the quarterly parameters of the
-chapter appendix, and solved with the book's expansion code
-(`uncertain_expansion`), fetched directly from the RiskUncertaintyValue
-repository and called exactly as the book's *Uncertainty Expansion —
-Computation Process* appendix calls it.
+(each runs on your own Colab runtime.)
 
-- `colab.ipynb` — the deliverable. Regenerated from `make_notebook.py`.
+A replication of the Chapter 11 shock-elasticity figures of *Risk,
+Uncertainty, and Value*. Both notebooks state the model in the chapter's
+notation with the quarterly parameters of the chapter appendix, and solve
+it by calling the book's expansion code (`uncertain_expansion`) directly —
+fetched from the RiskUncertaintyValue repository and used exactly as the
+book's *Uncertainty Expansion — Computation Process* appendix uses it.
+
+- `colab.ipynb` — Figures 11.1–11.3 (the baseline AK economy).
+  Regenerated from `make_notebook.py`.
+- `colab_habit.ipynb` — Figures 11.4–11.9 (habit preferences), the same
+  delivery pattern. Regenerated from `make_notebook_habit.py`.
 - `assets/` — the pipeline diagram in the notebook's title cell
   (`method.tex` is the TikZ source).
 
