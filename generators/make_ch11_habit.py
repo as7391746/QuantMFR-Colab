@@ -26,9 +26,11 @@ services that aggregate the consumption input and the habit stock with
 weight $\lambda$ and curvature $\tau$ — the same model the book's
 *Uncertainty Expansion — Computation Process* appendix uses as its worked
 example, with its quarterly parameters. The **solve** step is the book's
-expansion code (`uncertain_expansion`), called exactly as that appendix
-calls it — including its warm-start rule, where each solve starts from the
-previous solution's steady state. The **plots** are the six habit figures:
+expansion code (`uncertain_expansion`), called as the appendix calls it.
+The appendix's documented initial guess converges only for the baseline
+case, so the other parameter settings are reached by continuation — each
+warm-started from a solved neighbour. The **plots** are the six habit
+figures:
 investment-capital exposure elasticities and consumption price
 elasticities, internal versus external habit, $\gamma = 4$ and $8$.
 
@@ -172,10 +174,11 @@ state_equations = [technology_growth, volatility_growth, habit_growth]
 
 # The comparisons behind the six figures. Each figure overlays
 # lambda in {0.67, 0, -2} across three tau panels {1.001, 0.6, 0.01},
-# for internal/external habit and gamma in {4, 8}. Solves are chained:
-# every comparison warm-starts from its parent's steady state (the
-# appendix's own loop pattern); tau descends within each lambda, and
-# lambda = 0.5 is a stepping stone toward 0.67 (solved, not plotted).
+# for internal/external habit and gamma in {4, 8}. Continuation graph:
+# the baseline (lambda = 0, tau ~ 1) is solved from the appendix guess;
+# every other comparison warm-starts from a solved neighbour. tau descends
+# within each lambda; the lambda = 0 -> 0.67 jump is bridged by an
+# intermediate lambda = 0.5 (solved as a stepping stone, not plotted).
 GAMMAS = [4.0, 8.0]
 
 def _block(habit, gamma_v):
@@ -210,13 +213,18 @@ SOLVE = r"""# ================================ SOLVE ===========================
 T, GROWTH_SHOCK, PCT = 160, 1, 0.5
 BETA, RHO = float(np.exp(-0.01 * 0.25)), 1.001
 
-# Starting values for the steady-state search, as in the appendix; chained
-# comparisons instead start from [WARM_HEAD] + the parent's steady state.
+# Starting values for the steady-state search: the guess documented in the
+# book's computation appendix. That guess converges only for the baseline
+# (lambda = 0, tau ~ 1); every other (lambda, tau) fails from a cold start.
+# So the remaining comparisons are reached by continuation — each is
+# warm-started from a solved neighbour's steady state, prepended with the
+# appendix guess's own first entry (WARM_HEAD, since the engine returns the
+# steady state without that entry).
 BASELINE_GUESS = np.array([-3.0599204508041717, -3.1433984583550463,
                            (1 - BETA) / 0.0257233, 0.0257233,
                            0.0922 - 0.0257233, 0.02039991, 0.0, 0.0, 1.0,
                            0.01330655, 0.0, -11.97496092, -3.51858229])
-WARM_HEAD = -10.40379947
+WARM_HEAD = BASELINE_GUESS[0]   # the appendix guess's own first entry
 
 
 def args_for(gamma_v, lam_v, tau_v):
@@ -350,10 +358,11 @@ scales the price term structures down without changing their shape.
 $\nu_h = 0.025$ per quarter, with $(\lambda, \tau)$ varied across the
 panels. All values are those of the book's computation appendix.
 
-**Checks.** The solver is the book's expansion code, used as-is and called
-exactly as the book's computation appendix calls it — including its
-warm-start chain — and the resulting figures line up with the chapter's.
-More detail: [`README.md`](https://github.com/as7391746/QuantMFR-Colab)."""
+**Checks.** The solver is the book's expansion code, used as-is. The
+appendix's documented initial guess converges only for the baseline; the
+other settings are reached by continuation from it, and the resulting
+figures line up with the chapter's. More detail:
+[`README.md`](https://github.com/as7391746/QuantMFR-Colab)."""
 
 
 def main():
