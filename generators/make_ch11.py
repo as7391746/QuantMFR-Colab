@@ -7,6 +7,9 @@ fetched from the RiskUncertaintyValue repository — no layer in between.
 """
 
 import json
+import os
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 md = lambda s: {"cell_type": "markdown", "metadata": {},
                 "source": s.splitlines(keepends=True)}
@@ -350,7 +353,7 @@ def main():
                        "kernelspec": {"name": "python3",
                                       "display_name": "Python 3"}},
           "cells": cells}
-    json.dump(nb, open("colab.ipynb", "w"), indent=1)
+    json.dump(nb, open(os.path.join(ROOT, "colab.ipynb"), "w"), indent=1)
     print(f"colab.ipynb: {len(cells)} cells (6 code)")
 
 

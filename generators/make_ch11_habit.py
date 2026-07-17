@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate colab_habit.ipynb — Chapter 11, Figures 11.4-11.9.
+"""Generate ch11_habit.ipynb — Chapter 11, Figures 11.4-11.9.
 
 Model - solve - plot, same delivery standard as colab.ipynb: the
 habit-preference model is stated as the book's computation appendix states
@@ -8,6 +8,9 @@ RiskUncertaintyValue repository), and the six habit figures are plotted.
 """
 
 import json
+import os
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 md = lambda s: {"cell_type": "markdown", "metadata": {},
                 "source": s.splitlines(keepends=True)}
@@ -363,8 +366,8 @@ def main():
                        "kernelspec": {"name": "python3",
                                       "display_name": "Python 3"}},
           "cells": cells}
-    json.dump(nb, open("colab_habit.ipynb", "w"), indent=1)
-    print(f"colab_habit.ipynb: {len(cells)} cells (7 code)")
+    json.dump(nb, open(os.path.join(ROOT, "ch11_habit.ipynb"), "w"), indent=1)
+    print(f"ch11_habit.ipynb: {len(cells)} cells (7 code)")
 
 
 if __name__ == "__main__":
