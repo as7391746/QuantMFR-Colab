@@ -14,7 +14,7 @@ notebook:
   3. plain-language failure diagnostics: report where along the path the
      solve stopped instead of surfacing a raw numerical exception.
 """
-import sys, os, io, signal, contextlib
+import sys, os, io, signal, contextlib, time as _time
 SRC = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SRC)
 import numpy as np, sympy as sp
@@ -78,14 +78,22 @@ def _scan_root(f, lo, hi, n=240):
     return None
 
 
-def derive_guess(spec, params, n_states, n_shocks, g_target=0.005):
+def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
+                 state_overrides=None):
     """Model-derived starting vector, built by robust one-dimensional
     solves (scan + brentq) instead of a fragile joint fsolve:
       states  <- fixed points of the deterministic state equations,
       investment controls <- invert the growth equation to g_target,
       consumption controls <- absorb the static constraints,
     iterated Gauss-Seidel style; the utility entries are then computed
-    from the model's own expressions. No hand-tuned numbers."""
+    from the model's own expressions. No hand-tuned numbers.
+    state_overrides pins named states to given values (they skip the scan
+    but participate in every other pass, keeping the guess consistent).
+    Returns (guess, ok, names, unpinned) where unpinned lists states whose
+    own deterministic equation could not pin them (e.g. a ratio state that
+    cancels out of its own law of motion — only an Euler equation, which
+    lives in the engine's system, determines it)."""
+    ov = {k: float(v) for k, v in (state_overrides or {}).items()}
     pvals = _flatten(params)
     ctrl = [c[:-2] for c in spec["control_variables"]]
     stat = [s[:-2] for s in spec["state_variables"]]
@@ -115,8 +123,9 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005):
     # it down: the guess must be a feasible interior point, nothing more
     for g_target in [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002]:
       cvals = {c: 0.01 for c in ctrl}
-      svals = {s: 0.0 for s in stat}
+      svals = {s: ov.get(s, 0.0) for s in stat}
       ok = True
+      unpinned = []
       for _ in range(3):                       # Gauss-Seidel passes
           # investment controls: common value v inverts growth to g_target
           def fg(v):
@@ -136,10 +145,14 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005):
               if r is not None: cvals[tgt] = r; rem.remove(tgt)
               else: ok = False
           # states: each equation's own fixed point, wide scan
+          unpinned = []
           for e, s in zip(states_d, stat):
+              if s in ov: continue
               r = _scan_root(lambda x: num(e, ssyms[s], x) - x, -30.0, 30.0)
               if r is not None: svals[s] = r
-              else: ok = False
+              else:
+                  ok = False
+                  if s not in unpinned: unpinned.append(s)
           # leftover controls (e.g. a second capital's investment): close by
           # the equal-investment heuristic; their host state equation then
           # pins the corresponding ratio state in the states pass
@@ -184,7 +197,7 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005):
         elif nm == "mg_t": out.append(1.0)
         elif nm.startswith("m") and nm.endswith("_t"): out.append(0.0)
         else: out.append(0.1)
-    return np.array(out), ok, names
+    return np.array(out), ok, names, unpinned
 
 # ---------------------------------------------------------------------------
 def _residual(spec, params, ss_names, ss_vals):
@@ -238,6 +251,7 @@ def _solve_checked(spec_at, params, ss_names, guess, timeout=120, rtol=1e-6):
     ss = np.asarray(r["ss"], float)
     try:
         res = _residual(spec_at, params, ss_names, ss)
+        res = max(res, _engine_residual(r))
     except Exception as e:
         return None, f"residual-check error: {type(e).__name__}"
     if not np.isfinite(res) or res > rtol:
@@ -251,6 +265,7 @@ def _solve_checked(spec_at, params, ss_names, guess, timeout=120, rtol=1e-6):
                 ss2 = np.asarray(r2["ss"], float)
                 try:
                     res2 = _residual(spec_at, params, ss_names, ss2)
+                    res2 = max(res2, _engine_residual(r2))
                 except Exception:
                     res2 = np.inf
                 if np.isfinite(res2) and res2 <= rtol:
@@ -259,8 +274,61 @@ def _solve_checked(spec_at, params, ss_names, guess, timeout=120, rtol=1e-6):
         return None, f"REJECTED: returned root fails the model's own equations (residual {res:.1e})"
     return r, None
 
+def _engine_residual(r):
+    """Evaluate the engine's OWN complete steady-state system (Euler/FOC
+    and costate rows included) at the returned root. The spec-level check
+    above sees only state equations and constraints — it cannot detect a
+    root that violates the Euler equation. Preprocessing replicates
+    generate_ss_function exactly (tp1 collapsed to t, growth variable
+    substituted for the first variable, q and shocks set to zero)."""
+    eqs = list(r["ss_equations"])
+    variables = list(r["ss_variables"]); vt = list(r["ss_variables_tp1"])
+    n_J, n_X, n_W = r["var_shape"]
+    subs = robust.automate_step_1(variables)
+    n_G = variables.index(sp.Symbol("log_gk_t"))
+    n_Q = variables.index(sp.Symbol("q_t"))
+    subs[variables[0]] = variables[n_G]; subs[vt[0]] = variables[n_G]
+    subs[variables[n_Q]] = 0.; subs[vt[n_Q]] = 0.
+    for w in variables[n_Q + 1:n_Q + n_W + 1]: subs[w] = 0.
+    for w in vt[n_Q + 1:n_Q + n_W + 1]: subs[w] = 0.
+    eqs = [e.subs(subs) for e in eqs]
+    var_solve = variables[1:n_Q]
+    pd = {v: val for v, val in zip(r["parameter_names"], r["args"])}
+    # the engine stores the solved vector minus its first entry (vmk) in
+    # "ss"; vmk itself lives in recursive_ss = [log_gk_ss, vmk_ss]
+    full_x = np.concatenate([[float(np.asarray(r["recursive_ss"], float)[1])],
+                             np.asarray(r["ss"], float)])
+    vd = {str(v): val for v, val in zip(var_solve, full_x)}
+    vals = []
+    for e in eqs:
+        v = complex(e.subs(pd).subs(vd).evalf())
+        vals.append(abs(v.real) + abs(v.imag))
+    return float(np.max(vals))
+
+def _multistart(spec, p, ss_names, n_states, n_shocks, unpinned, timeout, say):
+    """For states whose own deterministic equation cannot pin them, try a
+    grid of starting values; each trial re-derives the WHOLE guess with the
+    state pinned there, so all other entries stay consistent with it.
+    First grid point whose solve passes the residual gate wins."""
+    GRID = [-4.0, -2.0, -6.0, -1.0, -0.5, 0.5, 1.0, 2.0]
+    last = "no grid point solved"
+    probe_timeout = min(timeout, 90)
+    deadline = _time.time() + 600      # total budget for the whole grid pass
+    for s in unpinned:
+        for val in GRID:
+            if _time.time() > deadline:
+                return None, f"multi-start over {unpinned} stopped at its 10-min budget (last: {last})"
+            g, _, _, _ = derive_guess(spec, p, n_states, n_shocks,
+                                      state_overrides={s: val})
+            r, err = _solve_checked(spec, p, ss_names, g, probe_timeout)
+            if r is not None:
+                say(f"  multi-start: state {s} started at {val} -> solved")
+                return r, None
+            last = err
+    return None, f"multi-start over {unpinned} failed (last: {last})"
+
 def autosolve(build_spec, anchor, target, n_states, n_shocks,
-              timeout=90, max_bisect=7, log=None):
+              timeout=90, max_bisect=7, log=None, state_seeds=None):
     """Coordinate-wise adaptive continuation from the anchor (the model's
     own default parameters) to the target: one changed parameter at a time,
     bisecting the step on failure, warm-starting every solve from the
@@ -273,19 +341,37 @@ def autosolve(build_spec, anchor, target, n_states, n_shocks,
                                np.asarray(target[k], float))]
     p0 = dict(anchor)
     spec0 = build_spec(p0)
-    guess, gok, names = derive_guess(spec0, p0, n_states, n_shocks)
+    guess, gok, names, unp0 = derive_guess(spec0, p0, n_states, n_shocks)
     say(f"anchor guess derived (pre-solve ok={gok})")
     ss_names = names[1:]   # the engine returns the solved vector minus its first entry
     # fast path: derive a guess AT THE TARGET and try it directly
     pt = dict(anchor); pt.update(target)
     spect = build_spec(pt)
-    gt, gtok, _ = derive_guess(spect, pt, n_states, n_shocks)
+    if state_seeds:
+        # model-derived steady-state hints (e.g. a paper's own closed-form
+        # chain): derive the guess with the states pinned there, first
+        gt, gtok, _, unpt = derive_guess(spect, pt, n_states, n_shocks,
+                                         state_overrides=state_seeds)
+        say(f"target guess derived from state seeds {state_seeds}")
+    else:
+        gt, gtok, _, unpt = derive_guess(spect, pt, n_states, n_shocks)
     rt, errt = _solve_checked(spect, pt, ss_names, gt, timeout)
+    if rt is None:
+        # grid-restart over states: unpinned ones first; if none were
+        # flagged, probe every state in turn (a state can also be "pinned"
+        # at a self-consistent but wrong scale — the Euler equation that
+        # selects the true scale is invisible to the pre-solve)
+        probe = unpt or [s[:-2] for s in spect["state_variables"]]
+        say(f"direct attempt failed ({errt}); multi-start over state(s) {probe}")
+        rt, errt = _multistart(spect, pt, ss_names, n_states, n_shocks, probe, timeout, say)
     if rt is not None:
         say("target solved DIRECTLY from the derived guess (no continuation)")
         return rt, "OK (direct)"
     say(f"direct attempt failed ({errt}); falling back to continuation")
     r, err = _solve_checked(spec0, p0, ss_names, guess, timeout)
+    if r is None:
+        probe0 = unp0 or [s[:-2] for s in spec0["state_variables"]]
+        r, err = _multistart(spec0, p0, ss_names, n_states, n_shocks, probe0, timeout, say)
     if r is None:
         return None, ("anchor solve failed (" + str(err) + ") — the model's own "
                       "default parameters do not solve; check the model or the guess derivation")
