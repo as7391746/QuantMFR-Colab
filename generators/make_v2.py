@@ -21,7 +21,7 @@ cells.append(md(r'''# `uncertain_expansion` — published production economies, 
 
 The engine in `v2/` is the book's expansion code (the robust steady-state variant) with an entry that derives its own starting point (`auto_guess.py`, a 9-line patch) and a driver (`autosolve.py`) that verifies every returned steady state against the model's own equations — and, where the paper provides one, against the paper's own closed-form steady-state restrictions. `v2/PROVENANCE.md` lists every difference from the branch copy.
 
-**Six economies.** Two from the book (the Section 11.7 AK economy and the computation appendix's habit economy) and four written directly from published papers — every calibration number traces to a printed table:
+**Six economies.** Two from the book (the Section 11.7 AK economy and the computation appendix's habit economy) and four written directly from the literature — every calibration number traces to a printed table:
 
 | model | source | preferences solved |
 |---|---|---|
@@ -29,7 +29,7 @@ The engine in `v2/` is the book's expansion code (the robust steady-state varian
 | HABIT | book, computation appendix | $\gamma = 8$, $\lambda = 0.67$, $\tau = 0.01$ |
 | KL | Kaltenbrunner & Lochstoer, *RFS* 2010 (LRR II) | $\gamma = 5$, $\rho = 2/3$ |
 | ACL | Ai, Croce & Li, *RFS* 2013 (Extension 1) | $\gamma = 10$, $\rho = 0.5$ |
-| CROCE | Croce, 2008 IGIER WP 260508 | $\gamma = 30$, $\rho = 0.5$ |
+| CROCE | Croce, *JME* 2014 (fixed-labor WP version) | $\gamma = 30$, $\rho = 0.5$ |
 | TALLARINI | Tallarini, *JME* 2000 | $\chi = \gamma = 100$, $\rho \approx 1$ |
 
 All models run at a **quarterly** frequency; conversions from each paper's native frequency use standard rules stated in each model's section. Runtime: about 60 minutes on Colab (the correlation battery is the bulk).'''))
@@ -108,9 +108,9 @@ Engine form: three share controls ($c^s + i^s + j^s = 1$), states $\omega^a = \l
 
 **Anchors**: the BH file's closed-form steady-state chain ($\bar{Q}^B \to \overline{JK}$) — frequency-generic identities evaluated at the quarterly parameters; it also pins $a_1, a_2$ (their Section V.A normalization $H = J$, $H_J = 1$) in closed form.'''))
 
-cells.append(md(r'''### CROCE — Croce (2008 IGIER WP 260508), fixed-labor benchmark
+cells.append(md(r'''### CROCE — Croce (*JME* 2014), fixed-labor benchmark (2008 working-paper version)
 
-The fixed-labor working-paper version of Croce (*JME* 2014); the published 2014 baseline has an endogenous labor choice, which lies outside the engine's current constraint class (see the Model note above). In the 2008 version leisure is not in the utility function, so labor is supplied inelastically at $n = 0.18$ — the paper's own corner solution (its footnote 14), not a modification. Model (p. 13):
+Croce, "Long-run productivity risk: A new hope for production-based asset pricing?", *JME* 2014. We solve the **fixed-labor benchmark of its 2008 working-paper version** (IGIER WP 260508): the published 2014 baseline has an endogenous labor choice, which lies outside the engine's current constraint class (see the Model note above). In the 2008 version leisure is not in the utility function, so labor is supplied inelastically at $n = 0.18$ — the paper's own corner solution (its footnote 14), not a modification. Model (p. 13):
 
 $$C_t + I_t \le Y_t, \qquad K_{t+1} = (1-\delta_k)K_t + G\!\left(\tfrac{I_t}{K_t}\right)K_t, \qquad G(x) = \tfrac{a_1}{1-1/\tau}\,x^{1-1/\tau} + a_2$$
 

@@ -220,7 +220,7 @@ MODELS["CROCE"] = dict(
               "a2": float(-_C_XB / (_C_TAU - 1))},
     target={"gamma": 30.0}, n_states=2, n_shocks=2,
     seeds={"wa": float(np.log((_C_YK / 0.18 ** 0.67) ** (1 / 0.67)))},
-    source="Croce (2008 IGIER WP 260508) Table 3A p.38; fixed labor per fn.14 (n=0.18)",
+    source="Croce (JME 2014), fixed-labor 2008 WP version, Table 3A p.38; fixed labor per fn.14 (n=0.18)",
     anchor_note="growth=mu; I/K=e^mu-1+dk; Euler alpha*Y/K = e^(mu/Psi)/beta-(1-dk)")
 
 # --- 6. Tallarini (JME 2000), production economy, labor fixed at Nbar ------
