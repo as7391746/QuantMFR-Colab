@@ -1,55 +1,47 @@
-# `v2/` — an automatic starting-point and verification layer for `uncertain_expansion`
+# `v2/` — an automatic initial guess for `uncertain_expansion`
 
-**Purpose.** Let a user state a production economy — the four pieces the
-chapter itself uses ($\kappa$, capital growth, state dynamics, resource
-constraint) plus a parameter dictionary — and solve it with the book's
-expansion engine **without hand-tuning a starting point**. The solver
-mathematics is untouched; the layer decides where to start, how far to
-escalate, and whether to accept.
+**What changed, in one paragraph.** The book's expansion engine requires
+the user to hand-build the starting vector for its steady-state solve —
+in the solver's internal ordering, by trial and error, once per model.
+v2 removes that requirement: an **automatic initial guess** constructs a
+feasible, model-consistent starting vector from the model declaration
+itself, and the solver mathematics is untouched. That construction is the
+one substantive change. Everything else in this folder is auxiliary
+machinery around it — a multi-start search for the few ratio states no
+one-dimensional equation can pin, optional paper-derived seeds (used as
+labeled comparators, never silently), a continuation path for hard
+preference targets, and acceptance gates that verify every returned
+steady state before it is reported.
 
-**Upstream baseline.** `lphansen/RiskUncertaintyValue`, branch
-`Planners_with_External`, commit `09ca5df` (engine file
-`uncertain_expansion_faisal_feb26.py`, the robust steady-state variant).
-Byte-level differences from that baseline: `PROVENANCE.md`. Frozen file
-hashes: `support_material/HASHES.txt`.
-
-**Conclusions, in brief.**
-
-1. Six economies — the book's AK and habit models plus
-   Kaltenbrunner–Lochstoer (RFS 2010), Ai–Croce–Li (RFS 2013, two
-   capitals), Croce (JME 2014, fixed-labor WP version), and Tallarini
-   (JME 2000, χ=100) — solve at their published preference targets from
-   automatically constructed starting points, each checked against
-   steady-state restrictions from the papers themselves.
-2. The constructed guess is a **feasible, model-consistent starting
-   vector, not a solution**; multi-start handles the ratio states only the
-   Euler equation can pin; optional paper seeds act as hints, and results
-   obtained with them are labeled consistency checks.
-3. The acceptance gates certify **convergence, not specification**; the v2
-   model class requires the resource constraint in output-share form. The
-   Lagrangian generalization that removes this restriction (and unlocks
-   labor choice) is a **proposal**, prototyped and validated separately —
-   it is not part of v2.
-4. Extreme uncertainty aversion is not a mathematical obstacle for these
-   calibrations; historical "extreme-ξ failures" trace to starting points
-   and solve-time budgets.
+**What it demonstrates.** Six published production economies — the book's
+AK and habit models, Kaltenbrunner–Lochstoer (RFS 2010), Ai–Croce–Li
+(RFS 2013, two capitals), Croce (JME 2014, fixed-labor 2008 WP version),
+Tallarini (JME 2000, χ=100) — declared from their papers and solved at
+their published preference targets. **Five of the six solve cold**, from
+the constructed guess alone; the two-capital ACL model is the honest
+exception — it needs the paper's closed-form seed, and all its results
+are labeled consistency checks. Extreme risk aversion is not a
+mathematical obstacle for these calibrations; historical failures trace
+to starting points and solve budgets.
 
 **How to read this folder.**
 
 | file | contents |
 |---|---|
-| [`MODIFICATIONS.md`](MODIFICATIONS.md) | the audit record: every change relative to upstream, its mathematical effect, validation, and status (implemented vs proposed); what is unchanged; known limitations |
-| [`AUTO_GUESS.md`](AUTO_GUESS.md) | the mathematical definition of the automatic starting point, the algorithm, and the three classes of coordinates (derived / unpinned / normalized) |
-| [`NUMERICAL_VALIDATION.md`](NUMERICAL_VALIDATION.md) | the merit-function geometry figure (KL), the six-model anchor record, and the ablation table separating each stage's contribution |
-| [`PROVENANCE.md`](PROVENANCE.md) | byte-level differences from the upstream engine copy |
-| `../v2_demo.ipynb` | the executable record: model declarations with notation glossary and calibrated/derived tags on every parameter, the solves, the robustness battery, elasticity paths |
-| `support_material/` | the figure script, grid data, ablation results, file hashes |
+| [`AUTO_GUESS.md`](AUTO_GUESS.md) | the whole story: the mathematical definition of the construction, the driver around it, the loss-landscape geometry of all six models, and the numerical validation (cold vs seeded, anchors, ablation) |
+| [`PROVENANCE.md`](PROVENANCE.md) | technical traceability: byte-level differences from the upstream engine copy (`lphansen/RiskUncertaintyValue`, branch `Planners_with_External`, commit `09ca5df`); frozen hashes in `support_material/HASHES.txt` |
+| `../v2_demo.ipynb` | the executable record: each economy with its own variable dictionary, equations in the paper's notation, calibration table with per-number provenance, cold and seed-assisted solves reported separately, the correlation battery, elasticity paths |
+| `support_material/` | `landscape_*.png` + `landscapes_overview.png` (the six loss landscapes), `make_landscapes.py` + `landscape_*.npz` (fully reproducible), `ablation.json`, `HASHES.txt` |
 
 **The one figure to look at first** —
-`support_material/kl_basin_found.png`: the merit-function geometry of the
-Kaltenbrunner–Lochstoer model. A plateau where the unseeded guess lands, a
-narrow Euler-compatible valley, domain gaps, and the lowest sampled point
-one grid cell from the paper's closed-form steady state — obtained by grid
-evaluation and a linear multiplier least-squares step, with no nonlinear
-root solve. It shows the numerical geometry of the problem — why
-initialization and globalization matter. It is not a convexity claim.
+`support_material/landscapes_overview.png`: the loss landscape of each
+economy on its reconstruction manifold, with the unseeded guess (●), the
+optional seed (◇), the lowest sampled residual (★), the verified steady
+state (+), and — on the floor — actual engine solves started from each
+region, classified by where they converge. It shows what the construction
+has to find and where it starts. It is not a convexity claim.
+
+*A Lagrangian generalization of the engine's first-order-condition
+assembly (removing the single-constraint restriction and unlocking labor
+choice) exists as a separately validated prototype; it is a proposal under
+review and is deliberately **not** part of v2.*
