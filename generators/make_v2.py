@@ -49,7 +49,7 @@ if not os.path.isdir(V2):
 sys.path.insert(0, os.path.abspath(V2))
 
 import numpy as np, sympy as sp
-import uncertain_expansion_faisal_feb26 as engine
+import uncertain_expansion_faisal_feb26 as engine   # the book's expansion code (robust ss variant)
 from autosolve import autosolve, _ss_names
 from models_sourced import MODELS, with_loadings
 from elasticity import exposure_elasticity, price_elasticity
@@ -76,6 +76,43 @@ with growth variable $G_t = K_t$ and $W_{t+1} \sim N(0, I)$ i.i.d.
 
 Model declarations live in [`v2/models_sourced.py`](https://github.com/as7391746/QuantMFR-Colab/blob/main/v2/models_sourced.py) (about 15 lines each, in the pattern above); the sections below give each economy's processes and calibration provenance.'''))
 
+cells.append(md(r'''### Notation and definitions
+
+**Economic symbols** (used in every model section):
+
+| symbol | meaning |
+|---|---|
+| $K_t$ | capital — the growth numeraire ($G_t = K_t$); every quantity is stationarized by dividing by $K$ |
+| $C_t,\ I_t,\ J_t,\ Y_t$ | consumption, investment (physical; intangible for ACL), output |
+| $\kappa$ | the consumption entry of the utility recursion: $\kappa = \widehat{C}_t - \widehat{K}_t = \log(C_t/K_t)$, a function of controls and states |
+| $\psi^x,\ \psi^g,\ \phi$ | state laws of motion; the capital-growth equation; the static resource constraint |
+| $\mathsf{q}$ | the perturbation parameter ($\mathsf{q}=0$ is the deterministic steady state; $\mathsf{q}^2$ terms are Ito corrections) |
+| $W_{t+1}$ | i.i.d. $N(0, I)$ shocks; $\Sigma$ = loading matrix, $\Sigma_r$ = its $r$-th row |
+| $\beta,\ \gamma,\ \rho$ | subjective discount factor, risk aversion, inverse IES — the recursive-utility parameters |
+| $\xi$ *(inside model specs)* | the capital-adjustment-cost elasticity (Jermann). **Not** the robustness parameter: robustness $\xi_{\text{rob}} = 1/(\gamma-1)$ enters only through $\gamma$ |
+| $c^s,\ i^s,\ j^s$ | controls stated as output shares $C/Y,\ I/Y,\ J/Y$, so the resource constraint reads $1 - \sum \text{shares} = 0$ |
+| $\omega,\ \omega^a,\ \omega^x,\ s$ | endogenous ratio states $\log(Z/K),\ \log(A/K),\ \log(X/K),\ \log(S/K)$ |
+| $x_t$ | the long-run-risk AR(1) state |
+| $\mu^0$ | constant term of the first-order drift tilt of the uncertainty-adjusted probability — the implied worst-case "pessimism" |
+| $a_1,\ a_2$ | Jermann normalization constants — **derived, never calibrated**: pinned by "no adjustment cost at the steady state" |
+
+**Code objects** (used in the Solve and Plot cells):
+
+| name | what it is |
+|---|---|
+| `engine` | the book's expansion code (`uncertain_expansion`, robust steady-state variant); solver mathematics unchanged |
+| `MODELS[name]` | one economy: `build` (parameters $\to$ engine arguments), `defaults` (anchor values), `target` (published preference target), `seeds` (the paper's closed-form steady-state values, used as hints), `n_states`, `n_shocks` |
+| `autosolve(build, defaults, target, ...)` | the solve driver: derives a starting vector from the model, solves, and accepts only if the model's own equations are satisfied; `state_seeds` passes the paper-derived hints |
+| `_ss_names(...)` | coordinate names of the solved steady-state vector, in the engine's internal ordering |
+| `with_loadings(build, L)` | replaces the shock vector $W$ by $L\,W$ (unit row norms) — the correlation battery |
+| `directions(family, n)` | builds each correlation family's loading matrix |
+| `log_sdf(sol, rho, beta)` | the log stochastic-discount-factor increment assembled from a solution — the appendix's own construction |
+| `exposure_elasticity`, `price_elasticity` | Borovicka-Hansen shock elasticities, the construction behind Figures 11.1-11.3 |
+| `T_ELAS = 160` | elasticity horizon (quarters) |
+| `ANCH` | the paper anchors — closed-form steady-state values each solution is checked against |
+| a solution `r` | dictionary: `r["ss"]` = steady state, `r["util_sol"]["mu_0"]` = the tilt $\mu^0$, `r["gc_tp1"]` = consumption growth, `X1_tp1`/`X2_tp1` = laws of motion |
+'''))
+
 cells.append(md(r'''### KL — Kaltenbrunner & Lochstoer (*RFS* 2010), permanent-shock benchmark "LRR II"
 
 Cobb–Douglas production with inelastic labor ($H = 1$, their Section 1.2), Jermann installation, Epstein–Zin preferences. Their Eqs. (3)–(5), (8)–(9) with footnote 4's normalization:
@@ -88,7 +125,9 @@ Engine form (output shares): state $\omega_t = \log(Z_t/K_t)$; $\kappa_t = \log 
 
 **Calibration** (their Table 1 p. 3197 and Table 4 p. 3210, already quarterly — no conversion): $\alpha = 0.36$, $\delta = 0.021$, $\mu = 0.004$, $\sigma = 4.11\%$, $\gamma = 5$, $\psi = 1.5$ ($\rho = 2/3$), $\beta = 0.998$, $\xi = 18$.
 
-**Anchors** (from the paper itself): balanced growth $= \mu$; $I/K = e^{\mu} - 1 + \delta$ (footnote 4); the deterministic Euler equation gives $\alpha\, Y/K = e^{\rho\mu}/\beta - (1-\delta)$, hence $\omega^*$ in closed form.'''))
+**Anchors** (from the paper itself): balanced growth $= \mu$; $I/K = e^{\mu} - 1 + \delta$ (footnote 4); the deterministic Euler equation gives $\alpha\, Y/K = e^{\rho\mu}/\beta - (1-\delta)$, hence $\omega^*$ in closed form.
+
+*Status of each number:* $\alpha, \delta, \mu, \sigma, \gamma, \psi, \beta, \xi$ — **calibrated** (cited tables). $a_1, a_2$ — **derived** from footnote 4's normalization. $\rho = 1/\psi = 2/3$ — **derived**.'''))
 
 cells.append(md(r'''### ACL — Ai, Croce & Li (*RFS* 2013), Extension 1 (intangible-capital adjustment costs)
 
@@ -106,7 +145,9 @@ Engine form: three share controls ($c^s + i^s + j^s = 1$), states $\omega^a = \l
 
 **Annual → quarterly**: $\beta_q = \beta^{1/4}$, $(1-\delta)_q = (1-\delta)^{1/4}$, $\mu_q = \mu/4$, $\sigma_{a,q} = \sigma_a/2$, $\rho_q = \rho^{1/4}$, $\sigma_{x,q}$ matched to the same unconditional variance of $x$; unit-free $\gamma, \psi, \alpha, \nu, \eta, \xi$ unchanged.
 
-**Anchors**: the BH file's closed-form steady-state chain ($\bar{Q}^B \to \overline{JK}$) — frequency-generic identities evaluated at the quarterly parameters; it also pins $a_1, a_2$ (their Section V.A normalization $H = J$, $H_J = 1$) in closed form.'''))
+**Anchors**: the BH file's closed-form steady-state chain ($\bar{Q}^B \to \overline{JK}$) — frequency-generic identities evaluated at the quarterly parameters; it also pins $a_1, a_2$ (their Section V.A normalization $H = J$, $H_J = 1$) in closed form.
+
+*Status of each number:* the Table C.2 values — **calibrated** ($\beta=0.971$, $\sigma_x=0.8636\%$ are the authors' working values via the BH file). All quarterly values — **derived** by the stated conversion rules. $a_1, a_2$ — **derived** (normalization). $\rho = 1/\psi = 0.5$ — **derived**.'''))
 
 cells.append(md(r'''### CROCE — Croce (*JME* 2014), fixed-labor benchmark (2008 working-paper version)
 
@@ -122,7 +163,9 @@ with $Y = K^{\alpha}(A n)^{1-\alpha}$ and $a_1, a_2$ pinned by $G(\bar{x}) = \ba
 
 **Monthly → quarterly**: $\mu_q = 3\mu$, $\sigma_q = \sigma\sqrt{3}$, $\rho_q = \rho^3$, $(1-\delta)_q = (1-\delta)^3$, $\beta_q = 0.98^{1/4}$, $\sigma_{x,q}$ variance-matched.
 
-**Anchors**: growth $= \mu_q$; $I/K = e^{\mu_q} - 1 + \delta_q$; Euler $\alpha Y/K = e^{\mu_q/\Psi}/\beta_q - (1-\delta_q)$.'''))
+**Anchors**: growth $= \mu_q$; $I/K = e^{\mu_q} - 1 + \delta_q$; Euler $\alpha Y/K = e^{\mu_q/\Psi}/\beta_q - (1-\delta_q)$.
+
+*Status of each number:* the Table 3A monthly values — **calibrated**. All quarterly values — **derived** by the stated rules. $a_1$ (=$b$), $a_2$ (=$c_0$) — **derived** (Jermann normalization at $\bar{x} = e^{\mu}-1+\delta_k$). $\rho = 1/\Psi = 0.5$ — **derived**.'''))
 
 cells.append(md(r'''### TALLARINI — Tallarini (*JME* 2000), risk-sensitive stochastic growth
 
@@ -132,11 +175,13 @@ $$Y_t = K_t^{1-\alpha_N}(N_t X_t)^{\alpha_N}, \qquad K_{t+1} = (1-\delta)K_t + I
 
 **Calibration** (Table 4 p. 524, quarterly, from Christiano–Eichenbaum 1992): $\alpha_N = 0.661$, $\delta = 0.021$, $g = 0.004$, $\sigma_\varepsilon = 0.0115$, $\beta = 0.9926$, $\bar{N} = 0.2305$; solved at his most extreme risk aversion $\chi = 100$. Unit EIS is run as $\rho = 1.001$, the book's own convention.
 
-**Anchors**: growth $= g$; $I/K = e^{g} - 1 + \delta$; Euler $(1-\alpha_N)Y/K = e^{\rho g}/\beta - (1-\delta)$.'''))
+**Anchors**: growth $= g$; $I/K = e^{g} - 1 + \delta$; Euler $(1-\alpha_N)Y/K = e^{\rho g}/\beta - (1-\delta)$.
+
+*Status of each number:* $\alpha_N, \delta, g, \sigma_\varepsilon, \beta$ — **calibrated** (Table 4, from Christiano-Eichenbaum 1992 except $\sigma_\varepsilon$). $\bar{N} = 0.2305$ — his value, but fixing labor there is **our restriction**. $\rho = 1.001$ — **convention** for unit EIS. $\chi = \gamma$ — his Eq. (2) mapping.'''))
 
 cells.append(md(r'''### AK and HABIT — the book's two economies
 
-Stated exactly as in Section 11.7 and the computation appendix (processes written out in the appendix's own notation there); calibration from the appendix's quarterly table. These are the replication baselines: AK has the closed-form check $D^{2*} = 0.019023$ (at $\rho = 1$; the engine's $\rho = 1.001$ run gives $0.019016$), and HABIT was validated earlier against the appendix notebook's stored solution to machine precision.
+Stated exactly as in Section 11.7 and the computation appendix (processes written out in the appendix's own notation there); calibration from the appendix's quarterly table. These are the replication baselines: AK has the closed-form check $D^{2*} = 0.019023$ (at $\rho = 1$; the engine's $\rho = 1.001$ run gives $0.019016$), and HABIT was validated earlier against the appendix notebook's stored solution to machine precision. All parameter values are **calibrated** from the appendix's quarterly table; $\rho = 1.001$ is the book's **convention** for the unit-EIS case.
 
 ### Shock-correlation structures
 
@@ -174,12 +219,14 @@ cells.append(md(r'''## Solve
 
 cells.append(code('''T_ELAS = 160
 
+# log SDF increment (appendix construction): log(beta) - rho*(cons growth) + (rho-1)*(vmr1+vmr2/2) + log N-tilde
 def log_sdf(sol, rho_v, beta_v):
     vmr = sol["vmr1_tp1"] + 0.5 * sol["vmr2_tp1"]
     return (np.log(beta_v) - rho_v * sol["gc_tp1"] + (rho_v - 1) * vmr
             + sol["log_N_tilde"])
 
-# paper anchors: growth rate and (where closed-form) state levels
+# paper anchors: closed-form steady-state values from each PAPER (growth rate,
+# ratio-state levels); every solved steady state is compared against these
 ANCH = {
     "AK": {"D2_t": 0.019023},
     "HABIT": {},
