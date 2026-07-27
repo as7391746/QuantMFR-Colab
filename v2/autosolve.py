@@ -25,6 +25,23 @@ from scipy.optimize import brentq, fsolve
 class _TO(Exception): pass
 def _alarm(s, f): raise _TO()
 
+# Portable wall-clock limit: SIGALRM on Unix; a no-op elsewhere (Windows has
+# no SIGALRM). On platforms without it the solve runs without a hard cap —
+# max_iter still bounds the engine, so it terminates, just not by the clock.
+_HAS_ALARM = hasattr(signal, "SIGALRM")
+
+@contextlib.contextmanager
+def _time_limit(seconds):
+    if _HAS_ALARM:
+        signal.signal(signal.SIGALRM, _alarm)
+        signal.alarm(int(seconds))
+        try:
+            yield
+        finally:
+            signal.alarm(0)
+    else:
+        yield
+
 # ---------------------------------------------------------------------------
 def _ss_names(spec, n_states, n_shocks):
     n_J = spec["n_controls"] + (n_states + 1) + 2
@@ -224,9 +241,8 @@ def _residual(spec, params, ss_names, ss_vals):
 
 
 def _solve_once(spec_at, guess, timeout=120):
-    signal.signal(signal.SIGALRM, _alarm); signal.alarm(timeout)
     try:
-        with contextlib.redirect_stdout(io.StringIO()):
+        with _time_limit(timeout), contextlib.redirect_stdout(io.StringIO()):
             r = robust.uncertain_expansion(
                 spec_at["control_variables"], spec_at["state_variables"],
                 spec_at["shock_variables"], spec_at["variables"],
@@ -235,12 +251,10 @@ def _solve_once(spec_at, guess, timeout=120):
                 np.asarray(guess, float), spec_at["parameter_names"],
                 spec_at["args"], approach="1", iter_tol=1e-7, max_iter=500,
                 ExternalHabit=spec_at.get("external_habit", False))
-        signal.alarm(0)
         return r, None
     except _TO:
         return None, "TIMEOUT"
     except Exception as e:
-        signal.alarm(0)
         return None, f"{type(e).__name__}: {str(e)[:60]}"
 
 
