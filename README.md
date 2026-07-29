@@ -1,11 +1,12 @@
 # QuantMFR — Colab figure replications
 
 One-click reproductions of the numerically-computed figures in *Risk,
-Uncertainty, and Value* (Hansen, Sargent). One notebook per figure group;
-each opens and runs on a free Colab runtime.
+Uncertainty, and Value* (Hansen, Sargent), plus an **automatic
+initial-guess extension** of the book's expansion code (see below). One
+notebook per figure group; each opens and runs on a free Colab runtime.
 
-Every notebook follows the same **model → solve → plot** pattern, and uses
-only the book's own materials:
+Every figure notebook follows the same **model → solve → plot** pattern,
+and uses only the book's own materials:
 
 - the **model** is stated in the chapter's notation, with the parameters of
   the chapter appendix;
@@ -16,7 +17,23 @@ only the book's own materials:
   Computation Process* appendix uses it;
 - the **plots** render the figures.
 
-Nothing outside the chapter and the book's own code is used.
+The figure notebooks use nothing outside the chapter and the book's own
+code. The `v2/` extension additionally solves four production economies
+from the published literature, each declared from its original paper.
+
+## The automatic initial guess (`v2/`)
+
+The book's expansion engine requires a hand-built starting vector for its
+steady-state solve. [`v2/`](v2/) removes that requirement: the starting
+vector is constructed from the model declaration itself, with the solver
+mathematics untouched. Six published production economies are the test
+bed; five solve from the constructed guess alone.
+
+- [`v2/README.md`](v2/README.md) — what changed, in one page
+- [`v2/AUTO_GUESS.md`](v2/AUTO_GUESS.md) — the construction, its
+  mathematics, six 3D loss landscapes, and the numerical validation
+- [`v2_demo.ipynb`](v2_demo.ipynb) — the executable record
+  ([![Open](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/as7391746/QuantMFR-Colab/blob/main/v2_demo.ipynb))
 
 ## Figures
 
@@ -32,6 +49,8 @@ More chapters follow, one notebook per figure group, on the same pattern.
 ```
 colab.ipynb          # Chapter 11, Figures 11.1–11.3  (stable link — do not rename)
 ch11_habit.ipynb     # Chapter 11, Figures 11.4–11.9
+v2_demo.ipynb        # six published economies solved via the automatic initial guess
+v2/                  # the extension: engine copy + auto guess + docs + landscapes
 assets/              # title-cell pipeline diagram
 generators/          # the scripts that emit the notebooks (not needed to run them)
 ```

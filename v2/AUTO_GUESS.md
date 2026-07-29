@@ -70,16 +70,31 @@ $m_s^0=(1-\beta)\,\partial\kappa/\partial c\,(u_0,s_0)$.
 
 For the unpinned coordinates the driver forms a **candidate set**
 
-$$\mathcal C_{\mathcal M}=\{\,G_0(\mathcal M,\theta;u):u\in\Gamma(\mathcal U)\,\},$$
+$$
+\mathcal C_{\mathcal M}
+=
+\left\{
+G_0(\mathcal M,\theta;u):u\in\Gamma(\mathcal U)
+\right\},
+$$
 
 $\Gamma(\mathcal U)$ a fixed grid of pinned values, re-deriving the whole
 guess at each grid point so all other entries stay consistent with it
 (10-minute budget). Only then comes the solve and the acceptance test:
 
-$$x^\star=\operatorname{Root}\!\left(F_{\mathcal M},\,x_0\right),\qquad
-\text{accept only if }\ \|F_{\mathcal M}(x^\star)\|_\infty<\tau=10^{-6},$$
+$$
+x^\star
+=
+\mathrm{Root}\left(F_{\mathcal M},x_0\right),
+\qquad
+\left\|F_{\mathcal M}(x^\star)\right\|_\infty
+<
+\tau,
+\quad
+\tau=10^{-6},
+$$
 
-where $\operatorname{Root}$ is the engine's own globalized Newton solve
+where $\mathrm{Root}$ is the engine's own globalized Newton solve
 (unchanged), and acceptance requires **both** residual gates — the model's
 deterministic equations and the engine's complete steady-state system.
 The gates certify **convergence, not specification**: both evaluate the
@@ -104,6 +119,16 @@ warm-starting each solve from the previous solution.
 ## 4. Numerical geometry: what $G_0$ has to find
 
 ![overview](support_material/landscapes_overview.png)
+
+**The six loss landscapes in 3D** (surface = residual height on the
+reconstruction manifold; floor = the same landscape as a contour map with
+the convergence probes):
+
+| | |
+|---|---|
+| ![AK 3D](support_material/landscape_ak.png) | ![HABIT 3D](support_material/landscape_habit.png) |
+| ![KL 3D](support_material/landscape_kl.png) | ![ACL 3D](support_material/landscape_acl.png) |
+| ![CROCE 3D](support_material/landscape_croce.png) | ![TALLARINI 3D](support_material/landscape_tallarini.png) |
 
 For each model a **reconstruction map** $R_{\mathcal M}(z_1,z_2)$ takes
 the two fragile coordinates (the endogenous ratio state and the investment
@@ -131,7 +156,10 @@ color scale throughout; `landscape_kl.png` is the canonical example):
   ◇ = $G_0$ with the paper's optional closed-form seed;
   ★ = the lowest sampled residual on the manifold — for KL one grid cell
   from the paper's closed-form steady state, found by grid evaluation
-  alone; **+** = the verified steady state (external check).
+  alone; **+** = the verified reference steady state — the accepted solve,
+  plotted for comparison (its own validation type is per model: independent
+  for the cold solves, consistency for seeded ACL, book replication for
+  HABIT).
 - The **floor dots** are the honest meaning of the word *basin*: at a
   sparse grid of admissible cells the engine solve is actually started
   from the reconstructed vector and classified — green (reaches the

@@ -439,7 +439,7 @@ def plot(name):
     ax.scatter([star[0]], [star[1]], [zf], marker="*", s=260, color="gold",
                edgecolor="k", label="lowest sampled residual on the reconstruction manifold", zorder=9)
     ax.scatter([xstar[0]], [xstar[1]], [zf], marker="P", s=90, color="#2ca02c",
-               edgecolor="k", label="verified steady state (external check)", zorder=9)
+               edgecolor="k", label="verified reference steady state", zorder=9)
     ax.plot([cold[0]] * 2, [cold[1]] * 2, [zf, cold[2]], color="red", lw=1.0, ls=":")
     ax.scatter([cold[0]], [cold[1]], [cold[2]], marker="o", s=110, color="#c44e52",
                edgecolor="k", label="unseeded auto guess (at its own residual)", zorder=9)
