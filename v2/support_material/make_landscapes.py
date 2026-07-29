@@ -32,6 +32,7 @@ not the surface, is what justifies the word "basin".
 
 Usage:  python make_landscapes.py KL          (one model)
         python make_landscapes.py overview    (2x3 panel from saved npz)
+        python make_landscapes.py render      (redraw all figures from saved npz)
         python make_landscapes.py all         (everything, sequentially)
 """
 import sys, os, re, time, warnings
@@ -39,17 +40,21 @@ warnings.filterwarnings("ignore")
 HERE = os.path.dirname(os.path.abspath(__file__))
 V2 = os.path.dirname(HERE)
 sys.path.insert(0, V2)
-import numpy as np, sympy as sp
+CLI_ARG = sys.argv[1] if len(sys.argv) > 1 else "all"
+RENDER_ONLY = CLI_ARG in {"overview", "render"}
+import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D  # noqa
-from scipy.optimize import brentq
-import uncertain_expansion_faisal_feb26 as robust
-from uncertain_expansion_faisal_feb26 import compile_equations
-from autosolve import derive_guess, autosolve, _solve_checked, _ss_names
-from models_sourced import MODELS
+if not RENDER_ONLY:
+    import sympy as sp
+    from scipy.optimize import brentq
+    import uncertain_expansion_faisal_feb26 as robust
+    from uncertain_expansion_faisal_feb26 import compile_equations
+    from autosolve import derive_guess, autosolve, _solve_checked, _ss_names
+    from models_sourced import MODELS
 
 ZMIN, ZMAX = -13.0, 2.0          # one residual color scale for all six
 NORM = mcolors.Normalize(vmin=ZMIN, vmax=ZMAX)
@@ -326,6 +331,15 @@ TITLE = {"AK": "AK (book §11.7)", "HABIT": "HABIT (book appendix)",
          "KL": "KL (RFS 2010)", "ACL": "ACL (RFS 2013)",
          "CROCE": "CROCE (2008 WP of JME 2014)", "TALLARINI": "TALLARINI (JME 2000)"}
 
+PLOT_LABELS = {
+    "AK": (r"$Z^2$", r"$D^2$"),
+    "HABIT": (r"$X$", r"$i^{mk}$"),
+    "KL": (r"$\omega$", r"$i^s$"),
+    "ACL": (r"$\omega^a$", r"$i^s$"),
+    "CROCE": (r"$\omega^a$", r"$i^s$"),
+    "TALLARINI": (r"$\omega^x$", r"$i^s$"),
+}
+
 
 def compute(name):
     cfg = CFG[name]
@@ -416,11 +430,11 @@ def plot(name):
                 allow_pickle=True)
     Z, G1, G2 = d["Z"], d["G1"], d["G2"]
     cold, seed, star, xstar, probes = d["cold"], d["seed"], d["star"], d["xstar"], d["probes"]
-    lab = list(d["labels"]); rule = str(d["rule"])
+    lab = PLOT_LABELS[name]
     WW, II = np.meshgrid(G1, G2)
     Zc = np.ma.masked_invalid(np.clip(Z, ZMIN, ZMAX))
 
-    fig = plt.figure(figsize=(12.5, 8.8))
+    fig = plt.figure(figsize=(9.2, 7.2))
     ax = fig.add_subplot(111, projection="3d")
     ax.plot_surface(WW, II, Zc, cmap=CMAP, norm=NORM, alpha=0.9,
                     linewidth=0, antialiased=True, rstride=2, cstride=2)
@@ -428,37 +442,35 @@ def plot(name):
     ax.contourf(WW, II, Zc, zdir="z", offset=zf, levels=24, cmap=CMAP,
                 norm=NORM, alpha=0.65)
     # convergence overlay on the floor
-    for out, c, m, lbl in ((2, "#2ca02c", "o", "solve from this cell reaches the verified steady state"),
-                           (1, "#ff7f0e", "s", "converges to a different root"),
-                           (0, "#d62728", "x", "no convergence within the probe budget")):
+    for out, c, m in ((2, "#2ca02c", "o"),
+                      (1, "#ff7f0e", "s"),
+                      (0, "#d62728", "x")):
         P = probes[probes[:, 2] == out] if len(probes) else np.zeros((0, 4))
         if len(P):
             ax.scatter(P[:, 0], P[:, 1], np.full(len(P), zf), marker=m, s=26,
-                       color=c, depthshade=False, label=lbl)
+                       color=c, depthshade=False)
     ax.plot([star[0]] * 2, [star[1]] * 2, [zf, star[2]], color="gold", lw=1.5)
     ax.scatter([star[0]], [star[1]], [zf], marker="*", s=260, color="gold",
-               edgecolor="k", label="lowest sampled residual on the reconstruction manifold", zorder=9)
+               edgecolor="k", zorder=9)
     ax.scatter([xstar[0]], [xstar[1]], [zf], marker="P", s=90, color="#2ca02c",
-               edgecolor="k", label="verified reference steady state", zorder=9)
+               edgecolor="k", zorder=9)
     ax.plot([cold[0]] * 2, [cold[1]] * 2, [zf, cold[2]], color="red", lw=1.0, ls=":")
     ax.scatter([cold[0]], [cold[1]], [cold[2]], marker="o", s=110, color="#c44e52",
-               edgecolor="k", label="unseeded auto guess (at its own residual)", zorder=9)
+               edgecolor="k", zorder=9)
     if np.isfinite(seed[0]):
         ax.plot([seed[0]] * 2, [seed[1]] * 2, [zf, seed[2]], color="k", lw=1.0, ls=":")
         ax.scatter([seed[0]], [seed[1]], [seed[2]], marker="D", s=100, color="white",
-                   edgecolor="k", label="auto guess + optional paper seed", zorder=9)
-    ax.set_xlabel(lab[0]); ax.set_ylabel(lab[1])
-    ax.set_zlabel(r"$\log_{10}\|F\|_\infty$ (full system, reconstructed slice)")
+                   edgecolor="k", zorder=9)
+    ax.set_xlabel(lab[0], labelpad=7)
+    ax.set_ylabel(lab[1], labelpad=7)
     ax.set_zlim(zf, ZMAX)
-    ax.set_title(f"{TITLE[name]} — loss landscape on the reconstruction manifold\n"
-                 f"reconstruction: {rule}; no joint nonlinear solve at grid points.\n"
-                 "Blank: outside the admissible reconstruction domain. "
-                 "Floor markers: engine solves started from the reconstructed cell.",
-                 fontsize=10)
+    ax.set_title(TITLE[name], fontsize=12, pad=10)
     ax.view_init(elev=28, azim=-63)
-    ax.legend(loc="upper left", fontsize=7)
+    ax.set_box_aspect((1.25, 1.0, 0.75))
+    ax.tick_params(labelsize=8, pad=1)
+    fig.subplots_adjust(left=0.0, right=0.97, bottom=0.01, top=0.92)
     out = os.path.join(HERE, f"landscape_{name.lower()}.png")
-    plt.savefig(out, dpi=115, bbox_inches="tight")
+    plt.savefig(out, dpi=135)
     plt.close(fig)
     print("saved", out, flush=True)
 
@@ -473,7 +485,7 @@ def overview():
         Z, G1, G2 = d["Z"], d["G1"], d["G2"]
         cold, seed, star, xstar, probes = (d["cold"], d["seed"], d["star"],
                                            d["xstar"], d["probes"])
-        lab = list(d["labels"])
+        lab = PLOT_LABELS[name]
         WW, II = np.meshgrid(G1, G2)
         Zc = np.ma.masked_invalid(np.clip(Z, ZMIN, ZMAX))
         cf = axp.contourf(WW, II, Zc, levels=24, cmap=CMAP, norm=NORM)
@@ -494,12 +506,7 @@ def overview():
         axp.set_title(TITLE[name], fontsize=11)
         axp.set_xlabel(lab[0], fontsize=9); axp.set_ylabel(lab[1], fontsize=9)
         axp.tick_params(labelsize=8)
-    fig.suptitle("Loss landscapes of the six economies on their reconstruction manifolds — "
-                 "one residual color scale.  ● unseeded auto guess   ◇ + optional paper seed   "
-                 "★ lowest sampled residual   + verified steady state;\n"
-                 "floor dots: engine solves started from the reconstructed cell "
-                 "(green: reaches the verified steady state; orange: a different root; red: no convergence). "
-                 "Gray: outside the admissible reconstruction domain.", fontsize=10)
+    fig.suptitle("Six-model residual landscapes", fontsize=12)
     cb = fig.colorbar(plt.cm.ScalarMappable(norm=NORM, cmap=CMAP),
                       ax=axes, shrink=0.8, pad=0.02)
     cb.set_label(r"$\log_{10}\|F\|_\infty$")
@@ -510,8 +517,12 @@ def overview():
 
 
 if __name__ == "__main__":
-    arg = sys.argv[1] if len(sys.argv) > 1 else "all"
+    arg = CLI_ARG
     if arg == "overview":
+        overview()
+    elif arg == "render":
+        for m in ["AK", "HABIT", "KL", "ACL", "CROCE", "TALLARINI"]:
+            plot(m)
         overview()
     elif arg == "all":
         for m in ["AK", "HABIT", "KL", "ACL", "CROCE", "TALLARINI"]:

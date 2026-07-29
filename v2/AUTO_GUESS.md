@@ -118,18 +118,6 @@ warm-starting each solve from the previous solution.
 
 ## 4. Numerical geometry: what $G_0$ has to find
 
-![overview](support_material/landscapes_overview.png)
-
-**The six loss landscapes in 3D** (surface = residual height on the
-reconstruction manifold; floor = the same landscape as a contour map with
-the convergence probes):
-
-| | |
-|---|---|
-| ![AK 3D](support_material/landscape_ak.png) | ![HABIT 3D](support_material/landscape_habit.png) |
-| ![KL 3D](support_material/landscape_kl.png) | ![ACL 3D](support_material/landscape_acl.png) |
-| ![CROCE 3D](support_material/landscape_croce.png) | ![TALLARINI 3D](support_material/landscape_tallarini.png) |
-
 For each model a **reconstruction map** $R_{\mathcal M}(z_1,z_2)$ takes
 the two fragile coordinates (the endogenous ratio state and the investment
 margin — the directions only the Euler equation can pin) and rebuilds
@@ -140,7 +128,14 @@ multipliers by one linear least-squares step (the first-order-condition
 block is linear in them). No joint nonlinear solve is performed at any
 grid point. The plotted surface is
 
-$$L_{\mathcal M}(z_1,z_2)=\log_{10}\left\|F_{\mathcal M}\!\big(R_{\mathcal M}(z_1,z_2)\big)\right\|_\infty ,$$
+$$
+L_{\mathcal M}(z_1,z_2)
+=
+\log_{10}
+\left\|
+F_{\mathcal M}\left(R_{\mathcal M}(z_1,z_2)\right)
+\right\|_\infty .
+$$
 
 so the only residual left on the manifold is the Euler incompatibility —
 the thing the solver actually has to resolve. Blank cells are **outside
@@ -149,26 +144,66 @@ value recursion undefined because the transversality margin is negative);
 they are properties of the candidate slice, not statements that the model
 has no solution.
 
-Reading the figures (`support_material/landscape_*.png`, one residual
-color scale throughout; `landscape_kl.png` is the canonical example):
+**Common visual key.** The surface height and color both report
+$\log_{10}\|F\|_\infty$ on a common scale. On the floor, green circles
+reach the verified steady state, orange squares reach another root, and
+red crosses do not converge within the probe budget. The large markers
+are ● unseeded $G_0$, ◇ optional paper seed, ★ lowest sampled residual,
+and + verified reference steady state.
 
-- ● = the unseeded $G_0$ guess, plotted at its own residual;
-  ◇ = $G_0$ with the paper's optional closed-form seed;
-  ★ = the lowest sampled residual on the manifold — for KL one grid cell
-  from the paper's closed-form steady state, found by grid evaluation
-  alone; **+** = the verified reference steady state — the accepted solve,
-  plotted for comparison (its own validation type is per model: independent
-  for the cold solves, consistency for seeded ACL, book replication for
-  HABIT).
-- The **floor dots** are the honest meaning of the word *basin*: at a
-  sparse grid of admissible cells the engine solve is actually started
-  from the reconstructed vector and classified — green (reaches the
-  verified steady state), orange (a different root), red (no convergence
-  within the probe budget). The surface shows geometry; the dots show
-  attraction.
-- This is the same instinct as examining objective geometry in convex
-  optimization, but it is **not** a claim that these problems are convex
-  — the landscapes visibly are not.
+![Six-model residual overview](support_material/landscapes_overview.png)
+
+*Figure 1. Six-model overview. Each panel is a top-down view of the same
+surface shown below. Gray denotes points outside the admissible
+reconstruction domain; the floor probes provide the empirical
+attraction-basin evidence.*
+
+![AK three-dimensional loss landscape](support_material/landscape_ak.png)
+
+*Figure 2a. AK economy. The low-residual trough is narrow in the investment
+direction and comparatively flat in the stochastic-volatility state. The
+unseeded construction solves without a paper seed and improves on the
+book's legacy hand-built starting vector.*
+
+![HABIT three-dimensional loss landscape](support_material/landscape_habit.png)
+
+*Figure 2b. Habit economy. The diagonal trough links the habit stock to
+capital investment. Green and red floor probes expose the attraction
+boundary, while the unseeded construction reaches the book-replication
+steady state without an external seed.*
+
+![KL three-dimensional loss landscape](support_material/landscape_kl.png)
+
+*Figure 2c. Kaltenbrunner–Lochstoer economy. The admissible domain has a
+curved boundary and a sharp Euler-compatible valley. The cold guess starts
+on the plateau but still solves; the optional paper seed moves the starting
+point close to the valley.*
+
+![ACL three-dimensional loss landscape](support_material/landscape_acl.png)
+
+*Figure 2d. Ai–Croce–Li economy. The two-capital model has the thinnest
+admissible region and the smallest sampled attraction basin. The cold
+construction fails within budget, whereas the paper-derived seed reaches
+the verified solution; this panel is therefore a consistency check rather
+than an independent discovery.*
+
+![CROCE three-dimensional loss landscape](support_material/landscape_croce.png)
+
+*Figure 2e. Croce economy. The reconstructed surface contains a broad,
+connected attraction basin: every sampled admissible starting point
+reaches the same steady state. The paper seed is an accelerator, not a
+requirement.*
+
+![Tallarini three-dimensional loss landscape](support_material/landscape_tallarini.png)
+
+*Figure 2f. Tallarini economy. Most sampled points lie in the verified
+basin even at risk aversion $\chi=100$. The cold construction solves
+quickly, and the closed-form seed is optional.*
+
+The surface shows numerical geometry; the floor probes show attraction.
+This follows the same instinct as examining objective geometry in convex
+optimization, but it is **not** a claim that these nonlinear systems are
+convex.
 
 Figures, grids, and probe outcomes are fully reproducible from
 `support_material/make_landscapes.py`; the sampled surfaces and probe
