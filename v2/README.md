@@ -2,35 +2,18 @@
 
 The appendix writes the model as
 
-$$
-\begin{aligned}
-X_{t+1}(\mathsf q)
-&=\psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\
-\widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q)
-&=\psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\
-\widehat C_t(\mathsf q)-\widehat G_t(\mathsf q)
-&=\kappa[D_t(\mathsf q),X_t(\mathsf q)],\\
-0&=\phi[D_t(\mathsf q),X_t(\mathsf q)].
-\end{aligned}
-$$
+$$ \begin{aligned} X_{t+1}(\mathsf q) &=\psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) &=\psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\ \widehat C_t(\mathsf q)-\widehat G_t(\mathsf q) &=\kappa[D_t(\mathsf q),X_t(\mathsf q)],\\ 0&=\phi[D_t(\mathsf q),X_t(\mathsf q)]. \end{aligned} $$
 
 `uncertain_expansion` requires starting values for the corresponding
 steady-state objects
 
-$$
-\widehat V^0-\widehat G^0,\quad
-\widehat C^0-\widehat G^0,\quad
-D^0,\quad MS^0,\quad MX^0,\quad MG^0,\quad
-\widehat G_{t+1}^0-\widehat G_t^0,\quad X^0.
-$$
+$$ \widehat V^0-\widehat G^0,\quad \widehat C^0-\widehat G^0,\quad D^0,\quad MS^0,\quad MX^0,\quad MG^0,\quad \widehat G_{t+1}^0-\widehat G_t^0,\quad X^0. $$
 
 The only substantive change in v2 is that these values are constructed
 from $\kappa,\psi^g,\psi^x,\phi$ when `initial_guess=None`; the expansion
 and root solver are unchanged. Components of $X^0$ not pinned by
 
-$$
-X^0=\psi^x[D^0,X^0,0,0]
-$$
+$$ X^0=\psi^x[D^0,X^0,0,0] $$
 
 are handled by multi-start. Paper values, when available, remain optional
 and are reported separately. Continuation is used only for difficult

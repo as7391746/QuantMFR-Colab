@@ -9,31 +9,12 @@ mathematics are unchanged.
 
 The engine takes the model in the notation of the computation appendix:
 
-$$
-\begin{aligned}
-X_{t+1}(\mathsf q)
-&=
-\psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\
-\widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q)
-&=
-\psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\
-\widehat C_t(\mathsf q)-\widehat G_t(\mathsf q)
-&=
-\kappa[D_t(\mathsf q),X_t(\mathsf q)],\\
-0&=\phi[D_t(\mathsf q),X_t(\mathsf q)].
-\end{aligned}
-$$
+$$ \begin{aligned} X_{t+1}(\mathsf q) &= \psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) &= \psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\ \widehat C_t(\mathsf q)-\widehat G_t(\mathsf q) &= \kappa[D_t(\mathsf q),X_t(\mathsf q)],\\ 0&=\phi[D_t(\mathsf q),X_t(\mathsf q)]. \end{aligned} $$
 
 Set $\mathsf q=0$, $W_{t+1}=0$, and impose time invariance. The
 construction alternates three one-dimensional calculations:
 
-$$
-\psi^g[D^0,X^0,0,0]
-=
-\widehat G_{t+1}^0-\widehat G_t^0,\qquad
-\phi[D^0,X^0]=0,\qquad
-X^0=\psi^x[D^0,X^0,0,0].
-$$
+$$ \psi^g[D^0,X^0,0,0] = \widehat G_{t+1}^0-\widehat G_t^0,\qquad \phi[D^0,X^0]=0,\qquad X^0=\psi^x[D^0,X^0,0,0]. $$
 
 The first equation pins the investment components of $D^0$, the static
 constraint pins the remaining components of $D^0$, and the last equation
@@ -45,39 +26,15 @@ $0.003,0.002,0.001,0.0005,0.0002$.
 
 The remaining entries follow from the same steady-state equations:
 
-$$
-\widehat C^0-\widehat G^0=\kappa[D^0,X^0],
-$$
+$$ \widehat C^0-\widehat G^0=\kappa[D^0,X^0], $$
 
 and, for $\rho\ne1$,
 
-$$
-\widehat V^0-\widehat G^0
-=
-\frac{1}{1-\rho}
-\log
-\left[
-\frac{
-(1-\beta)
-\exp\left((1-\rho)(\widehat C^0-\widehat G^0)\right)
-}{
-1-\beta
-\exp\left((1-\rho)
-(\widehat G_{t+1}^0-\widehat G_t^0)\right)
-}
-\right].
-$$
+$$ \widehat V^0-\widehat G^0 = \frac{1}{1-\rho} \log \left[ \frac{ (1-\beta) \exp\left((1-\rho)(\widehat C^0-\widehat G^0)\right) }{ 1-\beta \exp\left((1-\rho) (\widehat G_{t+1}^0-\widehat G_t^0)\right) } \right]. $$
 
 For $\rho=1$,
 
-$$
-\widehat V^0-\widehat G^0
-=
-\widehat C^0-\widehat G^0
-+
-\frac{\beta}{1-\beta}
-(\widehat G_{t+1}^0-\widehat G_t^0).
-$$
+$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta} (\widehat G_{t+1}^0-\widehat G_t^0). $$
 
 The static multiplier is initialized from the relevant consumption
 component of $(1-\beta)\kappa_d(D^0,X^0)$. The normalizations are
@@ -118,42 +75,37 @@ reach another root, and red crosses do not converge within the probe
 budget. The large markers are ● unseeded `initial_guess`, ◇ optional paper
 value, ★ lowest sampled residual, and + verified reference steady state.
 
-![Six-model residual overview](support_material/landscapes_overview.png)
-
-*Figure 1. Top-down comparison on a common residual scale. Gray is outside
-the admissible reconstruction domain; the floor probes show attraction.*
-
 ![AK three-dimensional loss landscape](support_material/landscape_ak.png)
 
-*Figure 2a. AK: the residual is relatively flat in $Z^2$ and sharply
+*Figure 1a. AK: the residual is relatively flat in $Z^2$ and sharply
 localized in the investment decision $D^2$; the unseeded
 `initial_guess` solves without a paper value.*
 
 ![HABIT three-dimensional loss landscape](support_material/landscape_habit.png)
 
-*Figure 2b. HABIT: the trough links the habit state $X^0$ to the capital
+*Figure 1b. HABIT: the trough links the habit state $X^0$ to the capital
 investment decision; the unseeded `initial_guess` reaches the appendix
 solution.*
 
 ![KL three-dimensional loss landscape](support_material/landscape_kl.png)
 
-*Figure 2c. KL: the cold starting point lies on the plateau, while the
+*Figure 1c. KL: the cold starting point lies on the plateau, while the
 optional paper value places $X^0$ close to the sharp low-residual valley.*
 
 ![ACL three-dimensional loss landscape](support_material/landscape_acl.png)
 
-*Figure 2d. ACL: the admissible region and attraction basin are narrow.
+*Figure 1d. ACL: the admissible region and attraction basin are narrow.
 The cold attempt fails within budget; the paper value is required and the
 result is a consistency check.*
 
 ![CROCE three-dimensional loss landscape](support_material/landscape_croce.png)
 
-*Figure 2e. Croce: every sampled admissible starting point reaches the same
+*Figure 1e. Croce: every sampled admissible starting point reaches the same
 steady state; the paper value only accelerates the solve.*
 
 ![Tallarini three-dimensional loss landscape](support_material/landscape_tallarini.png)
 
-*Figure 2f. Tallarini: most sampled starting points reach the verified
+*Figure 1f. Tallarini: most sampled starting points reach the verified
 steady state at $\chi=100$; the paper value is optional.*
 
 The surfaces show residual geometry; the floor probes show attraction.
