@@ -17,15 +17,17 @@ If components of $X^0$ are not determined by their own equations
 
 $$ X^0=\psi^x[D^0,X^0,0,0], $$
 
-we supply a grid of trial values to the solver. If a paper reports its
-steady-state values, we can start from them instead, and we report the
-two starting points separately: a solve without paper values, checked
-against the paper, is an independent check; a solve started from the
-paper's values is a consistency check. If the target parameter values
-do not solve directly, we move one parameter at a time from the
+we supply a grid of trial values to the solver; the user can also supply
+a starting value for such a component directly. If the target parameter
+values do not solve directly, we move one parameter at a time from the
 defaults, restarting from the previous solution. We report a solution
 only when the model equations and the complete steady-state system hold
 to within $10^{-6}$.
+
+In the validation, the supplied values are the papers' own steady-state
+values, and we report the two starting points separately: a solve
+without them, checked against the paper, is an independent check; a
+solve started from them is a consistency check.
 
 We include six economies: the appendix's AK and habit models,
 Kaltenbrunner–Lochstoer, Ai–Croce–Li, Croce, and Tallarini

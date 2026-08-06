@@ -11,7 +11,7 @@ The whole algorithm at a glance (source: `support_material/flowchart.tex`):
 
 ## 1. Construction in the appendix's notation
 
-The code takes the model in the notation of the computation appendix:
+We take the model in the notation of the computation appendix:
 
 $$ X_{t+1}(\mathsf q) = \psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q], $$
 $$ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) = \psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q], $$
@@ -62,7 +62,7 @@ steady state calculations,
 $$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = \beta\exp\left[(1-\rho)\,g^0\right]. $$
 
 If no positive-consumption allocation exists at $g^0$, or $Q^0\ge1$,
-the code lowers $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats.
+we lower $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeat.
 
 **Value entries.**
 Input: $(D^0,X^0)$, $g^0$, $Q^0$.
@@ -99,42 +99,43 @@ The entries are placed in the `initial_guess` ordering of
 | entry | construction |
 |---|---|
 | $D^0$, components of $X^0$ determined by their own equations, $g^0$, $\widehat C^0-\widehat G^0$, $\widehat V^0-\widehat G^0$, $MS^0$ | model equations |
-| components of $X^0$ not determined by their own equations | grid of trial values, or optional paper value |
+| components of $X^0$ not determined by their own equations | grid of trial values, or a value supplied by the user |
 | $MX^0$, $MG^0$ | set to $0$ and $1$ |
 
 ## 2. Solve and acceptance
 
 If a component of $X^0$ cancels out of its own steady-state equation,
-`autosolve.py` tries a grid of trial values for it and constructs all
-other entries of `initial_guess` afresh at every grid point. A paper's
-steady-state value, when available, is an optional alternative starting
-value. It is always reported separately: a solve started without paper
-values and then compared with the paper is an independent check; a solve
-started from the paper's value is a consistency check.
+we try a grid of trial values for it, constructing all other entries of
+`initial_guess` afresh at each value. The user can also supply a
+starting value for such a component directly.
 
-The code then runs the existing root solve of `uncertain_expansion`. A
-result is reported only when the model equations and the complete
-compiled steady-state system both hold to within $10^{-6}$. When the
-target parameter values do not solve directly, the code moves one
-parameter at a time from the default values toward the target,
-restarting each solve from the previous solution.
+We then run the existing root solve of `uncertain_expansion` and report
+a solution only when the model equations and the complete compiled
+steady-state system hold to within $10^{-6}$. If the target parameter
+values do not solve directly, we move one parameter at a time from the
+default values, restarting each solve from the previous solution.
+
+In the validation below, the supplied values are the papers' own
+steady-state values, and we report the two starting points separately:
+a solve without them, checked against the paper, is an independent
+check; a solve started from them is a consistency check.
 
 ## 3. The steady-state equations over a grid
 
 Each figure varies one component of $X^0$ and one investment component
-of $D^0$ over a grid. At every grid point the remaining entries are
-constructed as in Section 1, and the multiplier and co-state entries are
-completed by linear least squares — no joint solve is used to construct
-the surface. Height and color show the base-10 logarithm of the largest
+of $D^0$ over a grid. At every grid point we construct the remaining
+entries as in Section 1 and complete the multiplier and co-state entries
+by linear least squares — no joint solve is used to construct the
+surface. Height and color show the base-10 logarithm of the largest
 error in the complete steady-state system at that point.
 
 On the floor, green circles mark grid points from which
 `uncertain_expansion` reaches the verified steady state, orange squares
 a different solution, and red crosses no convergence within the time
 budget. The large markers are ● the constructed `initial_guess` without
-paper values, ◇ the constructed `initial_guess` with the paper's
-steady-state value, ★ the lowest sampled error, and + the verified
-steady state.
+supplied values, ◇ the constructed `initial_guess` with a supplied
+starting value (here, the paper's), ★ the lowest sampled error, and +
+the verified steady state.
 
 ![AK steady-state error surface](support_material/landscape_ak.png)
 
