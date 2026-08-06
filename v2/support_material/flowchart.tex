@@ -6,11 +6,11 @@
 \begin{tikzpicture}[
   font=\small,
   box/.style={rectangle, rounded corners=2pt, draw=black!70, fill=blue!4,
-              align=left, inner sep=6pt, text width=7.6cm},
+              align=left, inner sep=6pt, text width=8.8cm},
   dec/.style={rectangle, rounded corners=2pt, draw=black!70, very thick,
-              fill=orange!8, align=left, inner sep=6pt, text width=7.6cm},
+              fill=orange!8, align=left, inner sep=6pt, text width=8.8cm},
   fin/.style={rectangle, rounded corners=2pt, draw=black!70, fill=green!7,
-              align=left, inner sep=6pt, text width=7.6cm},
+              align=left, inner sep=6pt, text width=8.8cm},
   rbox/.style={rectangle, rounded corners=2pt, draw=black!70, fill=blue!4,
               align=left, inner sep=6pt, text width=6.6cm},
   rdec/.style={rectangle, rounded corners=2pt, draw=black!70, very thick,
@@ -27,15 +27,16 @@
   {set $\mathsf q=0$, set the shock vector to zero, treat the variables as
    time invariant};
 \node[box, below=4.5mm of det] (steps)
-  {\textbf{Step 1}\ \ investment components of $D^0$: $\psi^g=g^0$\\[2pt]
-   \textbf{Step 2}\ \ consumption components of $D^0$: $\phi=0$\\[2pt]
-   \textbf{Step 3}\ \ components of $X^0$, each from its own\\
-   \hspace*{1.28cm}equation $X_j^0=\psi_j^x[D^0,X^0,0,0]$\\[2pt]
-   \textbf{Step 4}\ \ remaining components of $D^0$, through\\
-   \hspace*{1.28cm}the state equation each enters\\[3pt]
+  {Start with a trial value of $g^0$ and perform the following steps:\\[2pt]
+   \textbf{Step 1}\ \ solve for investment components of $D^0$ from $\psi^g=g^0$\\[2pt]
+   \textbf{Step 2}\ \ solve for consumption components of $D^0$ from $\phi=0$\\[2pt]
+   \textbf{Step 3}\ \ solve for components of $X^0$, each from its\\
+   \hspace*{1.35cm}own equation $X_j^0=\psi_j^x[D^0,X^0,0,0]$\\[2pt]
+   \textbf{Step 4}\ \ solve for the remaining components of $D^0$,\\
+   \hspace*{1.35cm}through the state equation each enters\\[3pt]
    (repeated three times)};
 \node[dec, below=4.5mm of steps] (feas)
-  {positive consumption and $Q^0<1$\,?};
+  {Is the resulting consumption positive and $Q^0<1$\,?};
 \node[lp, left=7mm of feas] (lower)
   {lower $g^0$:\\ $0.003,\dots,0.0002$};
 \node[box, below=4.5mm of feas] (val)
@@ -44,8 +45,8 @@
    $MS^0=(1-\beta)\,\kappa_d$;\ \ $MG^0=1$,\ $MX^0=0$};
 \node[box, below=4.5mm of val] (ig)
   {\texttt{initial\_guess} assembled\\[2pt]
-   \footnotesize components of $X^0$ not determined by their own
-   equations: a grid of trial values, or the paper's value if supplied};
+   \footnotesize components of $X^0$ not determined by their own equations:
+   a grid of trial values (or a supplied paper value) goes to the solver};
 
 % ---------------- arrows ----------------
 \draw[a] (decl) -- (det);
