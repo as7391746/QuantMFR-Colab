@@ -9,17 +9,20 @@ mathematics are unchanged.
 
 The engine takes the model in the notation of the computation appendix:
 
-$$ \begin{aligned} X_{t+1}(\mathsf q) &= \psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) &= \psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q],\\ \widehat C_t(\mathsf q)-\widehat G_t(\mathsf q) &= \kappa[D_t(\mathsf q),X_t(\mathsf q)],\\ 0&=\phi[D_t(\mathsf q),X_t(\mathsf q)]. \end{aligned} $$
+$$ X_{t+1}(\mathsf q) = \psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q], $$
+$$ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) = \psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q], $$
+$$\widehat C_t(\mathsf q)-\widehat G_t(\mathsf q) = \kappa[D_t(\mathsf q),X_t(\mathsf q)],$$
+$$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 
 Set $\mathsf q=0$, $W_{t+1}=0$, and impose time invariance. The
-construction alternates three one-dimensional calculations:
+construction sequentially solves three one-dimensional calculations:
 
 $$ \psi^g[D^0,X^0,0,0] = \widehat G_{t+1}^0-\widehat G_t^0,\qquad \phi[D^0,X^0]=0,\qquad X^0=\psi^x[D^0,X^0,0,0]. $$
 
 The first equation pins the investment components of $D^0$, the static
 constraint pins the remaining components of $D^0$, and the last equation
 pins the components of $X^0$ that have their own deterministic fixed point.
-The passes repeat three times. The default trial value of
+The passes repeat three times. The default value of
 $\widehat G_{t+1}^0-\widehat G_t^0$ is $0.005$; if it does not give an
 interior allocation, the code tries
 $0.003,0.002,0.001,0.0005,0.0002$.
