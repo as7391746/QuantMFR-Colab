@@ -14,39 +14,82 @@ $$ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) = \psi^g[D_t(\mathsf q),X
 $$\widehat C_t(\mathsf q)-\widehat G_t(\mathsf q) = \kappa[D_t(\mathsf q),X_t(\mathsf q)],$$
 $$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 
-Set $\mathsf q=0$, $W_{t+1}=0$, and impose time invariance. The
-construction sequentially solves three one-dimensional calculations:
+Set $\mathsf q=0$, $W_{t+1}=0$, and impose time invariance; write
+$g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the trial growth rate
+(default $0.005$). The construction determines the steady-state objects
+one coordinate at a time — every solve below is a one-dimensional sign
+scan followed by bisection, never a joint system.
 
-$$ \psi^g[D^0,X^0,0,0] = \widehat G_{t+1}^0-\widehat G_t^0,\qquad \phi[D^0,X^0]=0,\qquad X^0=\psi^x[D^0,X^0,0,0]. $$
+**Pass 1 — investment components of $D^0$.** The components of $D^0$
+that enter $\psi^g$ take a common value solving
 
-The first equation pins the investment components of $D^0$, the static
-constraint pins the remaining components of $D^0$, and the last equation
-pins the components of $X^0$ that have their own deterministic fixed point.
-A component of $D^0$ that enters neither $\psi^g$ nor $\phi$ is pinned in a
-fourth pass through the state equation it enters, solved so that the
-corresponding component of $X^0$ keeps its fixed-point value (the solve
-driver instead closes such components by the equal-investment rule listed
-under Limits). The passes repeat three times. The default value of
-$\widehat G_{t+1}^0-\widehat G_t^0$ is $0.005$; if it does not give an
-interior allocation, the code tries
-$0.003,0.002,0.001,0.0005,0.0002$.
+$$ \psi^g[D^0,X^0,0,0] = g^0 . $$
 
-The remaining entries follow from the same steady-state equations:
+**Pass 2 — consumption components of $D^0$.** Each static constraint
+pins one still-free component of $D^0$:
+
+$$ \phi[D^0,X^0]=0 . $$
+
+**Pass 3 — self-pinning components of $X^0$.** Each state solves its own
+deterministic fixed-point equation
+
+$$ X_j^0=\psi_j^x[D^0,X^0,0,0] . $$
+
+A component that cancels out of its own equation — typically a ratio
+state, whose law of motion determines only its increment — cannot be
+pinned here; it is reported and handled in Section 2.
+
+**Pass 4 — leftover components of $D^0$.** A component that enters
+neither $\psi^g$ nor $\phi$ (a second capital good's investment) is
+solved through the state equation it enters, so that the corresponding
+component of $X^0$ keeps its fixed-point value. (The solve driver
+instead closes such components by the equal-investment rule listed under
+Limits.)
+
+The four passes repeat three times, Gauss–Seidel style, so that each
+pass sees the others' updated values. If no positive-consumption
+interior allocation exists at $g^0$ — or the value recursion below
+diverges there — the growth ladder lowers
+$g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and the passes rerun; the
+guess must be a feasible interior point, nothing more.
+
+**Utility entries (closed forms, no solves).** From the constructed
+$(D^0,X^0)$:
 
 $$ \widehat C^0-\widehat G^0=\kappa[D^0,X^0], $$
 
-and, for $\rho\ne1$,
+and, for $\rho\ne1$, the deterministic value recursion has the closed
+form
 
-$$ \widehat V^0-\widehat G^0 = \frac{1}{1-\rho} \log \left[ \frac{ (1-\beta) \exp\left((1-\rho)(\widehat C^0-\widehat G^0)\right) }{ 1-\beta \exp\left((1-\rho) (\widehat G_{t+1}^0-\widehat G_t^0)\right) } \right]. $$
+$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-\beta\exp\left((1-\rho)g^0\right)} , $$
 
-For $\rho=1$,
+valid exactly when $\beta\exp\left((1-\rho)g^0\right)<1$ — the
+transversality condition, which the growth ladder enforces. For
+$\rho=1$,
 
-$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta} (\widehat G_{t+1}^0-\widehat G_t^0). $$
+$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta}\, g^0 . $$
 
-The static multiplier is initialized from the relevant consumption
-component of $(1-\beta)\kappa_d(D^0,X^0)$. The normalizations are
-$MG^0=1$ and $MX^0=0$. These objects are placed directly into the
-`initial_guess` ordering already used by `uncertain_expansion`.
+**Multiplier and normalizations.** The static multiplier starts at the
+envelope value
+
+$$ MS^0 = (1-\beta)\,\frac{\partial\kappa}{\partial D_c}[D^0,X^0], $$
+
+where $D_c$ is the component of $D^0$ that enters $\kappa$ (the
+consumption margin). The normalizations are $MG^0=1$ and $MX^0=0$.
+These objects are placed directly into the `initial_guess` ordering
+already used by `uncertain_expansion`.
+
+**Worked example (Kaltenbrunner–Lochstoer).** The declaration has
+controls $(c^s,i^s)$, state $\omega=\log(Z/K)$. Pass 1 solves
+$\log\left(1-\delta+\phi_J(i^s e^{(1-\alpha)\omega})\right)=g^0$ for
+$i^s$; Pass 2 solves $1-c^s-i^s=0$ for $c^s$; Pass 3 finds that
+$\omega$ cancels out of its own law of motion
+($\omega_{t+1}-\omega_t=\mu-\psi^g$ fixes only the increment), so
+$\omega$ is reported unpinned and goes to the Section 2 grid — only the
+Euler equation, which lives inside the engine's compiled system, can
+determine its level. The utility entries then follow from the closed
+forms. Started this way, the model solves cold in about 27 s; the
+paper's closed-form $\omega$ is an optional accelerator (3 s).
 
 | entry | construction |
 |---|---|

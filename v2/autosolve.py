@@ -226,9 +226,6 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
         elif base in svals: out.append(float(svals[base]))
         elif nm == "log_gk_t": out.append(g0)
         elif nm == "vmk_t": out.append(v_util)
-        elif nm == "rmv_t": out.append(g0)   # det ss: R-V = V growth rate
-                                             # (defensive: no compiled model
-                                             # carries rmv_t in its ss vector)
         elif nm == "log_cmk_t": out.append(c_log)
         elif nm == "ms_t": out.append(ms)
         elif nm == "mg_t": out.append(1.0)

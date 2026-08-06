@@ -184,11 +184,6 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
             out.append(g_target)
         elif nm == "vmk_t":
             out.append(v_util)
-        elif nm == "rmv_t":
-            # defensive: no compiled model currently carries rmv_t in its
-            # solve vector. At the deterministic steady state R-hat - V-hat
-            # equals V-hat_{t+1} - V-hat_t, i.e. the growth rate.
-            out.append(g_target)
         elif nm == "log_cmk_t":
             out.append(c_log)
         elif nm == "ms_t":
