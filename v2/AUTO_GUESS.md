@@ -54,8 +54,7 @@ Section 2.
 **Step 4 — remaining components of $D^0$.**
 Input: the values from Steps 1–3.
 Output: each component of $D^0$ in neither $\psi^g$ nor $\phi$, solved
-through the state equation it enters. (`autosolve.py` instead sets it
-equal to the Step 1 value; see Limits.)
+through the state equation it enters.
 
 The four steps repeat three times. Construct, as in the appendix's
 steady state calculations,
@@ -64,24 +63,6 @@ $$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = 
 
 If no positive-consumption allocation exists at $g^0$, or $Q^0\ge1$,
 the code lowers $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats.
-
-**The trial growth rate $g^0$.** The default $0.005$ per quarter (about
-two percent a year) is in the range of the growth rates of the six
-calibrations. It is a starting value, not an assumption: the root solve
-determines the growth rate, and any trial value that leaves a
-positive-consumption allocation with $Q^0<1$ leads to the same steady
-state. Varying $g^0$ from $0.001$ to $0.02$ — a factor of twenty —
-moves the solved steady state by less than $10^{-10}$
-(differences relative to the $g^0=0.001$ solution):
-
-| $g^0$ | 0.002 | 0.005 | 0.01 | 0.02 |
-|---|---|---|---|---|
-| AK, largest change in the solved steady state | $7\times10^{-12}$ | $7\times10^{-12}$ | $6\times10^{-12}$ | $6\times10^{-12}$ |
-| KL, largest change in the solved steady state | $7\times10^{-11}$ | $9\times10^{-12}$ | $5\times10^{-12}$ | $5\times10^{-12}$ |
-
-An infeasible trial value — for KL, $g^0=0.02$ gives $Q^0\ge1$ — is
-lowered automatically, and the solution is unchanged. The value can be
-set through `autosolve(..., g_target=...)`.
 
 **Value entries.**
 Input: $(D^0,X^0)$, $g^0$, $Q^0$.
@@ -109,9 +90,8 @@ Output:
 $$ MS^0 = (1-\beta)\,\kappa_d[D^0,X^0], $$
 
 the $\kappa_d$ entry of $P^0L^0$ in the first-order conditions
-$Q^0H^0+P^0L^0-M^0=0$, evaluated with $MX^0=0$ and the exponential
-factors at their $\rho=1$ values — a starting value, not a solved
-equation — and $MG^0=1$, $MX^0=0$.
+$Q^0H^0+P^0L^0-M^0=0$ — a starting value, not a solved equation — and
+$MG^0=1$, $MX^0=0$.
 
 The entries are placed in the `initial_guess` ordering of
 `uncertain_expansion`.
@@ -209,7 +189,10 @@ reproduced by `support_material/make_landscapes.py`.
 
 Five of the six economies solve from the constructed `initial_guess`
 without paper values. ACL is the exception and is labeled accordingly.
-The full record is in `support_material/ablation.json`.
+The solved steady state does not depend on the trial value $g^0$:
+varying it from $0.001$ to $0.02$ moves the solved AK and KL steady
+states by less than $10^{-10}$, and an infeasible value is lowered
+automatically. The full record is in `support_material/ablation.json`.
 
 ## 5. Limits
 
