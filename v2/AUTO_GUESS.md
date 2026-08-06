@@ -63,15 +63,20 @@ the code lowers $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats.
 
 **Value entries.**
 Input: $(D^0,X^0)$, $g^0$, $Q^0$.
-Output:
+Output: $\widehat C^0-\widehat G^0=\kappa[D^0,X^0]$, and
+$\widehat V^0-\widehat G^0$ solving the appendix's steady state
+equations
 
-$$ \widehat C^0-\widehat G^0=\kappa[D^0,X^0], $$
+$$ \widehat V^0-\widehat G^0 = \frac{1}{1-\rho}\log\left[(1-\beta)\exp\left[(1-\rho)\left(\widehat C^0-\widehat G^0\right)\right]+\beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat G^0\right)\right]\right], \qquad \widehat R^0-\widehat G^0=\widehat V^0-\widehat G^0+g^0 . $$
 
-and, for $\rho\ne1$ (requires $Q^0<1$),
+The first equation is linear in
+$\exp\left[(1-\rho)\left(\widehat V^0-\widehat G^0\right)\right]$, so
+for $\rho\ne1$ its solution is
 
-$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-Q^0} ; $$
+$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-Q^0} , $$
 
-for $\rho=1$,
+which requires $Q^0<1$; for $\rho=1$ the updating is
+$\widehat V=(1-\beta)\widehat C+\beta\widehat R$, giving
 
 $$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta}\, g^0 . $$
 
@@ -81,8 +86,10 @@ Output:
 
 $$ MS^0 = (1-\beta)\,\kappa_d[D^0,X^0], $$
 
-the $\kappa_d$ entry of $P^0L^0$ in the first-order conditions, and
-$MG^0=1$, $MX^0=0$.
+the $\kappa_d$ entry of $P^0L^0$ in the first-order conditions
+$Q^0H^0+P^0L^0-M^0=0$, evaluated with $MX^0=0$ and the exponential
+factors at their $\rho=1$ values — a starting value, not a solved
+equation — and $MG^0=1$, $MX^0=0$.
 
 The entries are placed in the `initial_guess` ordering of
 `uncertain_expansion`.
