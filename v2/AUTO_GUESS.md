@@ -5,7 +5,7 @@ steady-state solve. The v2 entry layer constructs that vector from the model
 declaration when `initial_guess=None`. The expansion and root-solver
 mathematics are unchanged.
 
-The whole algorithm at a glance (source: `support_material/flowchart.tex`):
+The whole algorithm at a glance:
 
 <img src="support_material/flowchart.png" alt="flow chart of the automatic initial guess" width="540">
 
@@ -20,9 +20,12 @@ $$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 
 Set $\mathsf q=0$, set the shock vector to zero, and treat the variables
 as time invariant; write $g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the
-trial growth rate (default $0.005$). The construction determines the
-steady-state objects one coordinate at a time — every calculation below
-is one-dimensional, never a joint system.
+trial growth rate (default $0.005$). We initialize every component of
+$D^0$ at $0.01$ and every component of $X^0$ at $0$; the steps below
+overwrite these, and the three repetitions remove the dependence on
+them for every component the equations determine. The construction
+determines the steady-state objects one coordinate at a time — every
+calculation below is one-dimensional, never a joint system.
 
 **Step 1 — investment components of $D^0$.**
 Input: the trial growth rate $g^0$; the current values of the other
