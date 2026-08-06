@@ -5,6 +5,15 @@ steady-state solve. The v2 entry layer constructs that vector from the model
 declaration when `initial_guess=None`. The expansion and root-solver
 mathematics are unchanged.
 
+The construction is a
+[Gauss–Seidel](https://en.wikipedia.org/wiki/Gauss%E2%80%93Seidel_method)-style
+coordinate-by-coordinate calculation: we solve for each entry of the
+starting vector from the single model equation that most directly
+determines it, one entry at a time and repeatedly, always using the
+latest values of the other entries. We never solve a joint system.
+Entries that no single equation determines are searched over a grid
+(Section 2).
+
 The whole algorithm at a glance:
 
 <img src="support_material/flowchart.png" alt="flow chart of the automatic initial guess" width="540">
