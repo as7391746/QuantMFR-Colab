@@ -10,7 +10,7 @@
   dec/.style={rectangle, rounded corners=2pt, draw=black!70, very thick,
               fill=orange!8, align=left, inner sep=6pt, text width=7.6cm},
   fin/.style={rectangle, rounded corners=2pt, draw=black!70, fill=green!7,
-              align=left, inner sep=6pt, text width=6.6cm},
+              align=left, inner sep=6pt, text width=7.6cm},
   rbox/.style={rectangle, rounded corners=2pt, draw=black!70, fill=blue!4,
               align=left, inner sep=6pt, text width=6.6cm},
   rdec/.style={rectangle, rounded corners=2pt, draw=black!70, very thick,
@@ -46,18 +46,9 @@
   {\texttt{initial\_guess} assembled\\[2pt]
    \footnotesize components of $X^0$ not determined by their own
    equations: a grid of trial values, or the paper's value if supplied};
-
-% ---------------- right column: solve ----------------
-\node[rbox, right=16mm of decl.north east, anchor=north west] (root)
-  {root solve of \texttt{uncertain\_expansion}};
-\node[rdec, below=6mm of root] (acc)
-  {model equations and complete steady-state system hold to $10^{-6}$\,?};
-\node[fin, below=6mm of acc] (done)
-  {steady state accepted;\\ compared with the paper's values};
-\node[rbox, below=6mm of done] (retry)
-  {next grid point, constructing the guess afresh; if the target
-   parameters do not solve directly, move one parameter at a time,
-   restarting from the previous solution};
+\node[fin, below=4.5mm of ig]  (out)
+  {handed to the root solve of \texttt{uncertain\_expansion} --- unchanged;
+   acceptance and retries: Section 2};
 
 % ---------------- arrows ----------------
 \draw[a] (decl) -- (det);
@@ -67,10 +58,6 @@
 \draw[a] (lower.north) |- (steps.west);
 \draw[a] (feas) -- node[lbl, right=1pt]{yes} (val);
 \draw[a] (val) -- (ig);
-\draw[a] (ig.east) -- ++(7mm,0) |- ([yshift=2mm]root.west);
-\draw[a] (root) -- (acc);
-\draw[a] (acc) -- node[lbl, right=1pt]{yes} (done);
-\draw[a] (acc.east) -- ++(5mm,0) node[lbl, above right=1pt and -2pt]{no} |- (retry.east);
-\draw[a] (retry.west) -- ++(-4mm,0) |- ([yshift=-2mm]root.west);
+\draw[a] (ig) -- (out);
 \end{tikzpicture}
 \end{document}
