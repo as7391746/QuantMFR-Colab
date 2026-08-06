@@ -7,7 +7,7 @@ mathematics are unchanged.
 
 The whole algorithm at a glance (source: `support_material/flowchart.tex`):
 
-![flow chart of the automatic initial guess](support_material/flowchart.png)
+<img src="support_material/flowchart.png" alt="flow chart of the automatic initial guess" width="540">
 
 ## 1. Construction in the appendix's notation
 
@@ -193,14 +193,3 @@ The solved steady state does not depend on the trial value $g^0$:
 varying it from $0.001$ to $0.02$ moves the solved AK and KL steady
 states by less than $10^{-10}$, and an infeasible value is lowered
 automatically. The full record is in `support_material/ablation.json`.
-
-## 5. Limits
-
-1. The trial growth values, and the closing of extra investment
-   components in `autosolve.py` (set equal to the investment components
-   from Step 1), are conventions, not derivations.
-2. A component of $X^0$ that cancels out of its own steady-state
-   equation requires the grid of trial values or a supplied paper value.
-3. The two acceptance checks certify numerical convergence of the
-   compiled system, not correct model specification; the model-class
-   restriction and the paper checks remain necessary.

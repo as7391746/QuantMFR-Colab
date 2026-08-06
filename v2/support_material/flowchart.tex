@@ -46,9 +46,6 @@
   {\texttt{initial\_guess} assembled\\[2pt]
    \footnotesize components of $X^0$ not determined by their own
    equations: a grid of trial values, or the paper's value if supplied};
-\node[fin, below=4.5mm of ig]  (out)
-  {handed to the root solve of \texttt{uncertain\_expansion} --- unchanged;
-   acceptance and retries: Section 2};
 
 % ---------------- arrows ----------------
 \draw[a] (decl) -- (det);
@@ -58,6 +55,5 @@
 \draw[a] (lower.north) |- (steps.west);
 \draw[a] (feas) -- node[lbl, right=1pt]{yes} (val);
 \draw[a] (val) -- (ig);
-\draw[a] (ig) -- (out);
 \end{tikzpicture}
 \end{document}
