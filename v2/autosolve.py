@@ -103,7 +103,7 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
       investment controls <- invert the growth equation to g_target,
       consumption controls <- absorb the static constraints,
     iterated Gauss-Seidel style; the utility entries are then computed
-    from the model's own expressions. No hand-tuned numbers.
+    from the model's own expressions. No model-specific hand-tuned numbers.
     state_overrides pins named states to given values (they skip the scan
     but participate in every other pass, keeping the guess consistent).
     Returns (guess, ok, names, unpinned) where unpinned lists states whose
@@ -133,11 +133,20 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
     def num(expr, sym=None, x=None):
         p = point()
         if sym is not None: p[sym] = x
-        return complex(expr.subs(p).evalf()).real
+        v = complex(expr.subs(p).evalf())
+        if abs(v.imag) > 1e-10: return np.nan   # infeasible region, not a value
+        return v.real
+
+    beta, rho = float(pvals["beta"]), float(pvals["rho"])
+
+    def _transversal(g):
+        # deterministic value recursion converges iff beta*e^((1-rho)g) < 1
+        return abs(rho - 1.0) < 1e-6 or beta * np.exp((1 - rho) * g) < 1.0
 
     ok = True
-    # if the target growth leaves no positive-consumption allocation, step
-    # it down: the guess must be a feasible interior point, nothing more
+    # if the target growth leaves no positive-consumption allocation (or the
+    # value recursion diverges there), step it down: the guess must be a
+    # feasible interior point, nothing more
     for g_target in [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002]:
       cvals = {c: 0.01 for c in ctrl}
       svals = {s: ov.get(s, 0.0) for s in stat}
@@ -181,22 +190,31 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
               if c in pinned: continue
               if inv_ctrl: cvals[c] = cvals[inv_ctrl[0]]
 
-      if ok and all(v > 0 for v in cvals.values()):
+      if ok and all(v > 0 for v in cvals.values()) and _transversal(g_target):
           break
 
-    beta, rho = float(pvals["beta"]), float(pvals["rho"])
     c_log = num(kappa_d)
     g0 = g_target
     if abs(rho - 1.0) < 1e-6:
         v_util = c_log + beta * g0 / (1 - beta)
     else:
         lam_g = beta * np.exp((1 - rho) * g0)
-        v_util = (np.log((1 - beta) * np.exp((1 - rho) * c_log)
-                         / max(1 - lam_g, 1e-10)) / (1 - rho))
+        if lam_g >= 1:
+            # transversality fails at every ladder rung: no convergent
+            # deterministic value recursion — flag it, don't fake a number
+            ok = False
+            v_util = c_log
+        else:
+            # log-domain form: identical value, no exp overflow at extreme rho
+            v_util = c_log + np.log((1 - beta) / (1 - lam_g)) / (1 - rho)
     ms = 0.1
-    cc = (oth_ctrl or ctrl)[0]
+    # envelope condition: take the control that actually enters kappa (the
+    # consumption margin), not a position in the declaration order
+    kap_ctrl = [c for c in ctrl if csyms[c] in kappa_d.free_symbols]
+    cc = (kap_ctrl or oth_ctrl or ctrl)[0]
     try:
-        ms = float((1 - beta) * num(sp.diff(kappa_d, csyms[cc])))
+        val = (1 - beta) * num(sp.diff(kappa_d, csyms[cc]))
+        if np.isfinite(val): ms = float(val)
     except Exception:
         pass
 
@@ -208,7 +226,9 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
         elif base in svals: out.append(float(svals[base]))
         elif nm == "log_gk_t": out.append(g0)
         elif nm == "vmk_t": out.append(v_util)
-        elif nm == "rmv_t": out.append(v_util)
+        elif nm == "rmv_t": out.append(g0)   # det ss: R-V = V growth rate
+                                             # (defensive: no compiled model
+                                             # carries rmv_t in its ss vector)
         elif nm == "log_cmk_t": out.append(c_log)
         elif nm == "ms_t": out.append(ms)
         elif nm == "mg_t": out.append(1.0)

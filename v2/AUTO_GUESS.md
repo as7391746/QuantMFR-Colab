@@ -22,7 +22,11 @@ $$ \psi^g[D^0,X^0,0,0] = \widehat G_{t+1}^0-\widehat G_t^0,\qquad \phi[D^0,X^0]=
 The first equation pins the investment components of $D^0$, the static
 constraint pins the remaining components of $D^0$, and the last equation
 pins the components of $X^0$ that have their own deterministic fixed point.
-The passes repeat three times. The default value of
+A component of $D^0$ that enters neither $\psi^g$ nor $\phi$ is pinned in a
+fourth pass through the state equation it enters, solved so that the
+corresponding component of $X^0$ keeps its fixed-point value (the solve
+driver instead closes such components by the equal-investment rule listed
+under Limits). The passes repeat three times. The default value of
 $\widehat G_{t+1}^0-\widehat G_t^0$ is $0.005$; if it does not give an
 interior allocation, the code tries
 $0.003,0.002,0.001,0.0005,0.0002$.

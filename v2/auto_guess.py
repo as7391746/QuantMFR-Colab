@@ -3,7 +3,8 @@ model itself (v2 addition). Used when uncertain_expansion is called with
 initial_guess=None.
 
 Method (all one-dimensional scan + brentq root finds — no fragile joint
-solve, no hand-tuned numbers):
+solve, no model-specific hand-tuned numbers; the interior seeds 0.01/0.1,
+the 240-point scan, and the growth ladder are model-agnostic constants):
   - states  <- fixed points of the DETERMINISTIC state equations;
   - investment controls (those in the capital-growth equation) <- invert
     deterministic growth to a modest target (0.005 per period);
@@ -71,14 +72,25 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
         p = point()
         if sym is not None:
             p[sym] = x
-        return complex(expr.subs(p).evalf()).real
+        v = complex(expr.subs(p).evalf())
+        if abs(v.imag) > 1e-10:
+            return np.nan          # infeasible region (e.g. negative base to
+        return v.real              # a fractional power) — not a real value
 
-    # step the target growth down if it admits no positive-consumption point
+    beta = float(pvals["beta"])
+    rho = float(pvals["rho"])
+
+    def transversal(g):
+        # the deterministic value recursion converges iff beta*e^((1-rho)g) < 1
+        return abs(rho - 1.0) < 1e-6 or beta * np.exp((1 - rho) * g) < 1.0
+
+    # step the target growth down if it admits no positive-consumption
+    # interior point, or if the value recursion diverges at that growth rate
+    interior = False
     for g_try in [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002]:
       g_target = g_try
       cvals = {c: 0.01 for c in ctrl}
       svals = {s: 0.0 for s in stat}
-      feasible = True
       for _ in range(3):
           def fg(v):
               p = point()
@@ -94,7 +106,8 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
               tgt = next((c for c in rem if csym[c] in con.free_symbols), None)
               if tgt is None:
                   continue
-              r = _scan_root(lambda x: num(con, csym[tgt], x), 1e-8, 1.0)
+              r = (_scan_root(lambda x: num(con, csym[tgt], x), 1e-8, 1.0)
+                   or _scan_root(lambda x: num(con, csym[tgt], x), 1e-8, 10.0))
               if r is not None:
                   cvals[tgt] = r
                   rem.remove(tgt)
@@ -115,28 +128,49 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
               if host is None:
                   continue
               e, s = host
-              r = _scan_root(lambda x: num(e, csym[c], x) - svals[s], 1e-8, 1.0)
+              r = (_scan_root(lambda x: num(e, csym[c], x) - svals[s], 1e-8, 1.0)
+                   or _scan_root(lambda x: num(e, csym[c], x) - svals[s], 1e-8, 10.0))
               if r is not None:
                   cvals[c] = r
 
-      if feasible and all(v > 0 for v in cvals.values()):
+      if all(v > 0 for v in cvals.values()) and transversal(g_target):
+          interior = True
           break
 
-    beta = float(pvals["beta"])
-    rho = float(pvals["rho"])
+    if not interior:
+        print("auto_guess: no interior allocation with a convergent value "
+              "recursion found on the growth ladder; proceeding with g = "
+              f"{g_target} — inspect the model declaration or supply "
+              "initial_guess explicitly")
+
     c_log = num(kappa_d)
     if abs(rho - 1.0) < 1e-6:
         v_util = c_log + beta * g_target / (1 - beta)
     else:
         lam_g = beta * np.exp((1 - rho) * g_target)
-        v_util = (np.log((1 - beta) * np.exp((1 - rho) * c_log)
-                         / max(1 - lam_g, 1e-10)) / (1 - rho))
+        if lam_g >= 1:
+            raise ValueError(
+                "auto_guess: beta*exp((1-rho)*g) >= 1 at every growth rate on "
+                f"the ladder (beta={beta}, rho={rho}): the deterministic value "
+                "recursion diverges (transversality fails). Supply "
+                "initial_guess explicitly or adjust the calibration.")
+        # log-domain form of  log[(1-beta) e^{(1-rho)c} / (1-lam)] / (1-rho):
+        # identical value, no exp overflow at extreme rho
+        v_util = c_log + np.log((1 - beta) / (1 - lam_g)) / (1 - rho)
     ms = 0.1
-    cc = (oth_ctrl or ctrl)[0]
+    # the multiplier is initialized from the envelope condition, so take the
+    # control that actually enters kappa (the consumption margin), not a
+    # position in the declaration order
+    kap_ctrl = [c for c in ctrl if csym[c] in kappa_d.free_symbols]
+    cc = (kap_ctrl or oth_ctrl or ctrl)[0]
     try:
-        ms = float((1 - beta) * num(sp.diff(kappa_d, csym[cc])))
+        val = (1 - beta) * num(sp.diff(kappa_d, csym[cc]))
+        if np.isfinite(val):
+            ms = float(val)
+        else:
+            print("auto_guess: multiplier initialization not finite; using 0.1")
     except Exception:
-        pass
+        print("auto_guess: multiplier initialization failed; using 0.1")
 
     names = [str(v) for v in ss_variables]
     names = names[1:names.index("q_t")]
@@ -151,7 +185,10 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
         elif nm == "vmk_t":
             out.append(v_util)
         elif nm == "rmv_t":
-            out.append(v_util)
+            # defensive: no compiled model currently carries rmv_t in its
+            # solve vector. At the deterministic steady state R-hat - V-hat
+            # equals V-hat_{t+1} - V-hat_t, i.e. the growth rate.
+            out.append(g_target)
         elif nm == "log_cmk_t":
             out.append(c_log)
         elif nm == "ms_t":
