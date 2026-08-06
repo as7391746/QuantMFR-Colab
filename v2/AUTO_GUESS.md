@@ -20,18 +20,25 @@ trial growth rate (default $0.005$). The construction determines the
 steady-state objects one coordinate at a time — every calculation below
 is one-dimensional, never a joint system.
 
-**Step 1 — investment components of $D^0$.** The components of $D^0$
-that enter $\psi^g$ take a common value solving
+**Step 1 — investment components of $D^0$.**
+Input: the trial growth rate $g^0$; the current values of the other
+components of $D^0$ and of $X^0$.
+Output: a common value for the components of $D^0$ that enter $\psi^g$,
+solving
 
 $$ \psi^g[D^0,X^0,0,0] = g^0 . $$
 
-**Step 2 — consumption components of $D^0$.** Each static constraint
-determines one still-free component of $D^0$:
+**Step 2 — consumption components of $D^0$.**
+Input: the components of $D^0$ from Step 1; the current $X^0$.
+Output: one still-free component of $D^0$ for each static constraint,
+solving
 
 $$ \phi[D^0,X^0]=0 . $$
 
 **Step 3 — components of $X^0$ determined by their own equations.**
-Each state is solved from its own steady-state equation
+Input: the components of $D^0$ from Steps 1–2.
+Output: each component of $X^0$, solved from its own steady-state
+equation
 
 $$ X_j^0=\psi_j^x[D^0,X^0,0,0] . $$
 
@@ -40,12 +47,13 @@ two trending variables, whose evolution equation determines only its
 increment — is not determined here; it is reported and handled in
 Section 2.
 
-**Step 4 — remaining components of $D^0$.** A component that enters
-neither $\psi^g$ nor $\phi$ (a second capital good's investment) is
-solved through the state equation it enters, so that the corresponding
-component of $X^0$ keeps the value from Step 3. (The solve routine in
-`autosolve.py` instead sets such components equal to the investment
-components from Step 1; see Limits.)
+**Step 4 — remaining components of $D^0$.**
+Input: the values from Steps 1–3.
+Output: each component of $D^0$ that enters neither $\psi^g$ nor $\phi$
+(a second capital good's investment), solved through the state equation
+it enters, so that the corresponding component of $X^0$ keeps the value
+from Step 3. (The solve routine in `autosolve.py` instead sets such
+components equal to the investment components from Step 1; see Limits.)
 
 The four steps repeat three times, so that each step uses the others'
 updated values. Following the appendix's steady state calculations,
@@ -59,8 +67,9 @@ $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats the steps: the
 constructed point must be an allocation the model equations accept,
 nothing more.
 
-**Value entries (closed forms, no solves).** From the constructed
-$(D^0,X^0)$:
+**Value entries (closed forms, no solves).**
+Input: the constructed $(D^0,X^0)$, the accepted $g^0$, and $Q^0$.
+Output:
 
 $$ \widehat C^0-\widehat G^0=\kappa[D^0,X^0], $$
 
@@ -73,29 +82,17 @@ $\rho=1$,
 
 $$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta}\, g^0 . $$
 
-**Multiplier and co-state entries.** The Lagrange multiplier on the
-static constraint starts at
+**Multiplier and co-state entries.**
+Input: the constructed $(D^0,X^0)$.
+Output: the Lagrange multiplier on the static constraint,
 
 $$ MS^0 = (1-\beta)\,\kappa_d[D^0,X^0], $$
 
 taking the derivative with respect to the component of $D^0$ that enters
 $\kappa$ — the corresponding entry of $P^0L^0$ in the first-order
-conditions. The remaining values are set to $MG^0=1$ and $MX^0=0$.
+conditions — and the remaining values, set to $MG^0=1$ and $MX^0=0$.
 These objects are placed directly into the `initial_guess` ordering
 already used by `uncertain_expansion`.
-
-**Example (Kaltenbrunner–Lochstoer).** The declaration has controls
-$(c^s,i^s)$ and state $\omega=\log(Z/K)$. Step 1 solves
-$\log\left(1-\delta+\phi_J(i^s e^{(1-\alpha)\omega})\right)=g^0$ for
-$i^s$; Step 2 solves $1-c^s-i^s=0$ for $c^s$; Step 3 finds that
-$\omega$ cancels out of its own evolution equation
-($\omega_{t+1}-\omega_t=\mu-\psi^g$ determines only the increment), so
-$\omega$ is reported and goes to the Section 2 grid — only the
-first-order conditions, which live inside the compiled steady-state
-system, can determine its level. The value entries then follow from the
-closed forms. Started this way, the model solves in about 27 s without
-the paper's value; the paper's closed-form $\omega$ is optional and cuts
-this to 3 s.
 
 | entry | construction |
 |---|---|
