@@ -45,8 +45,8 @@
    $MS^0=(1-\beta)\,\kappa_d$;\ \ $MG^0=1$,\ $MX^0=0$};
 \node[box, below=4.5mm of val] (ig)
   {\texttt{initial\_guess} assembled\\[2pt]
-   \footnotesize components of $X^0$ not determined by their own equations:
-   a grid of trial values (or a supplied paper value) goes to the solver};
+   \footnotesize if components of $X^0$ are not determined by their own equations:
+   we supply a grid of trial values to the solver};
 
 % ---------------- arrows ----------------
 \draw[a] (decl) -- (det);
