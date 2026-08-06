@@ -5,27 +5,9 @@ steady-state solve. The v2 entry layer constructs that vector from the model
 declaration when `initial_guess=None`. The expansion and root-solver
 mathematics are unchanged.
 
-The whole algorithm at a glance:
+The whole algorithm at a glance (source: `support_material/flowchart.tex`):
 
-```mermaid
-flowchart TD
-    A["model declaration:<br/>&kappa;, &psi;&#8203;<sup>g</sup>, &psi;&#8203;<sup>x</sup>, &phi;, parameter values"] --> B["set q = 0, set the shock vector to zero,<br/>treat the variables as time invariant"]
-    B --> C["Step 1: investment components of D&#8304;<br/>solve &psi;<sup>g</sup> = g&#8304; &nbsp;(trial value 0.005)"]
-    C --> D["Step 2: consumption components of D&#8304;<br/>solve &phi; = 0"]
-    D --> E["Step 3: each component of X&#8304;<br/>from its own equation X&#8304; = &psi;<sup>x</sup>[D&#8304;, X&#8304;, 0, 0]<br/>(a component that cancels out is left for the grid)"]
-    E --> F["Step 4: remaining components of D&#8304;<br/>through the state equation each enters"]
-    F --> G{"after three repetitions:<br/>positive consumption and Q&#8304; &lt; 1 ?"}
-    G -- "no" --> H["lower g&#8304;:<br/>0.003, 0.002, 0.001, 0.0005, 0.0002"]
-    H --> C
-    G -- "yes" --> I["value entries:<br/>C&#770;&#8304; &minus; G&#770;&#8304; = &kappa;; &nbsp;V&#770;&#8304; &minus; G&#770;&#8304; in closed form"]
-    I --> J["MS&#8304; = (1 &minus; &beta;) &kappa;<sub>d</sub>; &nbsp;MG&#8304; = 1, MX&#8304; = 0"]
-    J --> K["initial_guess assembled<br/>(components of X&#8304; not determined: a grid of<br/>trial values, or the paper's value if supplied)"]
-    K --> L["root solve of uncertain_expansion"]
-    L --> M{"model equations and complete<br/>steady-state system hold to 10&#8315;&#8310; ?"}
-    M -- "yes" --> N["steady state accepted;<br/>compared with the paper's values"]
-    M -- "no" --> O["next grid point, constructing the guess afresh;<br/>if the target parameters do not solve directly,<br/>move one parameter at a time, restarting<br/>from the previous solution"]
-    O --> L
-```
+![flow chart of the automatic initial guess](support_material/flowchart.png)
 
 ## 1. Construction in the appendix's notation
 
