@@ -21,11 +21,16 @@ $$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 Set $\mathsf q=0$, set the shock vector to zero, and treat the variables
 as time invariant; write $g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the
 trial growth rate (default $0.005$). We initialize every component of
-$D^0$ at $0.01$ and every component of $X^0$ at $0$; the steps below
-overwrite these, and the three repetitions remove the dependence on
-them for every component the equations determine. The construction
-determines the steady-state objects one coordinate at a time — every
-calculation below is one-dimensional, never a joint system.
+$D^0$ at $0.01$ and every component of $X^0$ at $0$. The zero is only a
+starting point for the scans, not a guess: Step 3 searches a wide
+interval for each root, so a component whose own equation places it far
+from zero — the volatility state of the AK model sits near $\log\mu_2$,
+about $-12$ — is still found, and for a mean-zero state zero is the
+steady state itself. The steps below overwrite these values, and the
+three repetitions remove the dependence on them for every component the
+equations determine. The construction determines the steady-state
+objects one coordinate at a time — every calculation below is
+one-dimensional, never a joint system.
 
 **Step 1 — investment components of $D^0$.**
 Input: the trial growth rate $g^0$; the current values of the other
