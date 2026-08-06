@@ -20,17 +20,14 @@ $$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 
 Set $\mathsf q=0$, set the shock vector to zero, and treat the variables
 as time invariant; write $g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the
-trial growth rate (default $0.005$). We initialize every component of
-$D^0$ at $0.01$ and every component of $X^0$ at $0$. The zero is only a
-starting point for the scans, not a guess: Step 3 searches a wide
-interval for each root, so a component whose own equation places it far
-from zero — the volatility state of the AK model sits near $\log\mu_2$,
-about $-12$ — is still found, and for a mean-zero state zero is the
-steady state itself. The steps below overwrite these values, and the
-three repetitions remove the dependence on them for every component the
-equations determine. The construction determines the steady-state
-objects one coordinate at a time — every calculation below is
-one-dimensional, never a joint system.
+trial growth rate (default $0.005$). The auto guess initializes every
+$D^0$ component at $0.01$ and every $X^0$ component at $0$. The zero is
+only a starting point. (Our Step 3 searches a wide interval for each
+root, so a component whose own equation places it far from zero is
+still found, and for a mean-zero state zero is the steady state
+itself.) The steps below overwrite these values one component at a
+time, and we run these steps repeatedly. We do not solve the joint
+system here.
 
 **Step 1 — investment components of $D^0$.**
 Input: the trial growth rate $g^0$; the current values of the other
@@ -54,18 +51,16 @@ equation
 
 $$ X_j^0=\psi_j^x[D^0,X^0,0,0] . $$
 
-A component that cancels out of its own equation — typically a ratio of
-two trending variables, whose evolution equation determines only its
-increment — is not determined here; it is reported and handled in
-Section 2.
+A component that cancels out of its own equation (for example, a
+degree-0 ratio) will not be overwritten here; it is handled in
+[Section 2](#2-solve-and-acceptance).
 
 **Step 4 — remaining components of $D^0$.**
 Input: the values from Steps 1–3.
 Output: each component of $D^0$ in neither $\psi^g$ nor $\phi$, solved
 through the state equation it enters.
 
-The four steps repeat three times. Construct, as in the appendix's
-steady state calculations,
+These four steps repeat multiple rounds. To verify the output, we construct
 
 $$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = \beta\exp\left[(1-\rho)\,g^0\right]. $$
 
