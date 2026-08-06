@@ -49,50 +49,43 @@ Section 2.
 
 **Step 4 — remaining components of $D^0$.**
 Input: the values from Steps 1–3.
-Output: each component of $D^0$ that enters neither $\psi^g$ nor $\phi$
-(a second capital good's investment), solved through the state equation
-it enters, so that the corresponding component of $X^0$ keeps the value
-from Step 3. (The solve routine in `autosolve.py` instead sets such
-components equal to the investment components from Step 1; see Limits.)
+Output: each component of $D^0$ in neither $\psi^g$ nor $\phi$, solved
+through the state equation it enters. (`autosolve.py` instead sets it
+equal to the Step 1 value; see Limits.)
 
-The four steps repeat three times, so that each step uses the others'
-updated values. Following the appendix's steady state calculations,
-construct
+The four steps repeat three times. Construct, as in the appendix's
+steady state calculations,
 
 $$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = \beta\exp\left[(1-\rho)\,g^0\right]. $$
 
-If no allocation with positive consumption exists at $g^0$, or
-$Q^0\ge1$ there, the code lowers
-$g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats the steps: the
-constructed point must be an allocation the model equations accept,
-nothing more.
+If no positive-consumption allocation exists at $g^0$, or $Q^0\ge1$,
+the code lowers $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats.
 
-**Value entries (closed forms, no solves).**
-Input: the constructed $(D^0,X^0)$, the accepted $g^0$, and $Q^0$.
+**Value entries.**
+Input: $(D^0,X^0)$, $g^0$, $Q^0$.
 Output:
 
 $$ \widehat C^0-\widehat G^0=\kappa[D^0,X^0], $$
 
-and, for $\rho\ne1$, the recursive utility updating gives
+and, for $\rho\ne1$ (requires $Q^0<1$),
 
-$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-Q^0} , $$
+$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-Q^0} ; $$
 
-valid exactly when $Q^0<1$, which the lowering of $g^0$ enforces. For
-$\rho=1$,
+for $\rho=1$,
 
 $$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta}\, g^0 . $$
 
 **Multiplier and co-state entries.**
-Input: the constructed $(D^0,X^0)$.
-Output: the Lagrange multiplier on the static constraint,
+Input: $(D^0,X^0)$.
+Output:
 
 $$ MS^0 = (1-\beta)\,\kappa_d[D^0,X^0], $$
 
-taking the derivative with respect to the component of $D^0$ that enters
-$\kappa$ — the corresponding entry of $P^0L^0$ in the first-order
-conditions — and the remaining values, set to $MG^0=1$ and $MX^0=0$.
-These objects are placed directly into the `initial_guess` ordering
-already used by `uncertain_expansion`.
+the $\kappa_d$ entry of $P^0L^0$ in the first-order conditions, and
+$MG^0=1$, $MX^0=0$.
+
+The entries are placed in the `initial_guess` ordering of
+`uncertain_expansion`.
 
 | entry | construction |
 |---|---|
