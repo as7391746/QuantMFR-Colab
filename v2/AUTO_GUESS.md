@@ -5,185 +5,200 @@ steady-state solve. The v2 entry layer constructs that vector from the model
 declaration when `initial_guess=None`. The expansion and root-solver
 mathematics are unchanged.
 
-## 1. Construction in the engine's notation
+## 1. Construction in the appendix's notation
 
-The engine takes the model in the notation of the computation appendix:
+The code takes the model in the notation of the computation appendix:
 
 $$ X_{t+1}(\mathsf q) = \psi^x[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q], $$
 $$ \widehat G_{t+1}(\mathsf q)-\widehat G_t(\mathsf q) = \psi^g[D_t(\mathsf q),X_t(\mathsf q),\mathsf qW_{t+1},\mathsf q], $$
 $$\widehat C_t(\mathsf q)-\widehat G_t(\mathsf q) = \kappa[D_t(\mathsf q),X_t(\mathsf q)],$$
 $$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 
-Set $\mathsf q=0$, $W_{t+1}=0$, and impose time invariance; write
-$g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the trial growth rate
-(default $0.005$). The construction determines the steady-state objects
-one coordinate at a time — every solve below is a one-dimensional sign
-scan followed by bisection, never a joint system.
+Set $\mathsf q=0$, set the shock vector to zero, and treat the variables
+as time invariant; write $g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the
+trial growth rate (default $0.005$). The construction determines the
+steady-state objects one coordinate at a time — every calculation below
+is one-dimensional, never a joint system.
 
-**Pass 1 — investment components of $D^0$.** The components of $D^0$
+**Step 1 — investment components of $D^0$.** The components of $D^0$
 that enter $\psi^g$ take a common value solving
 
 $$ \psi^g[D^0,X^0,0,0] = g^0 . $$
 
-**Pass 2 — consumption components of $D^0$.** Each static constraint
-pins one still-free component of $D^0$:
+**Step 2 — consumption components of $D^0$.** Each static constraint
+determines one still-free component of $D^0$:
 
 $$ \phi[D^0,X^0]=0 . $$
 
-**Pass 3 — self-pinning components of $X^0$.** Each state solves its own
-deterministic fixed-point equation
+**Step 3 — components of $X^0$ determined by their own equations.**
+Each state is solved from its own steady-state equation
 
 $$ X_j^0=\psi_j^x[D^0,X^0,0,0] . $$
 
-A component that cancels out of its own equation — typically a ratio
-state, whose law of motion determines only its increment — cannot be
-pinned here; it is reported and handled in Section 2.
+A component that cancels out of its own equation — typically a ratio of
+two trending variables, whose evolution equation determines only its
+increment — is not determined here; it is reported and handled in
+Section 2.
 
-**Pass 4 — leftover components of $D^0$.** A component that enters
+**Step 4 — remaining components of $D^0$.** A component that enters
 neither $\psi^g$ nor $\phi$ (a second capital good's investment) is
 solved through the state equation it enters, so that the corresponding
-component of $X^0$ keeps its fixed-point value. (The solve driver
-instead closes such components by the equal-investment rule listed under
-Limits.)
+component of $X^0$ keeps the value from Step 3. (The solve routine in
+`autosolve.py` instead sets such components equal to the investment
+components from Step 1; see Limits.)
 
-The four passes repeat three times, Gauss–Seidel style, so that each
-pass sees the others' updated values. If no positive-consumption
-interior allocation exists at $g^0$ — or the value recursion below
-diverges there — the growth ladder lowers
-$g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and the passes rerun; the
-guess must be a feasible interior point, nothing more.
+The four steps repeat three times, so that each step uses the others'
+updated values. Following the appendix's steady state calculations,
+construct
 
-**Utility entries (closed forms, no solves).** From the constructed
+$$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = \beta\exp\left[(1-\rho)\,g^0\right]. $$
+
+If no allocation with positive consumption exists at $g^0$, or
+$Q^0\ge1$ there, the code lowers
+$g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats the steps: the
+constructed point must be an allocation the model equations accept,
+nothing more.
+
+**Value entries (closed forms, no solves).** From the constructed
 $(D^0,X^0)$:
 
 $$ \widehat C^0-\widehat G^0=\kappa[D^0,X^0], $$
 
-and, for $\rho\ne1$, the deterministic value recursion has the closed
-form
+and, for $\rho\ne1$, the recursive utility updating gives
 
-$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-\beta\exp\left((1-\rho)g^0\right)} , $$
+$$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{1}{1-\rho} \log \frac{1-\beta}{1-Q^0} , $$
 
-valid exactly when $\beta\exp\left((1-\rho)g^0\right)<1$ — the
-transversality condition, which the growth ladder enforces. For
+valid exactly when $Q^0<1$, which the lowering of $g^0$ enforces. For
 $\rho=1$,
 
 $$ \widehat V^0-\widehat G^0 = \widehat C^0-\widehat G^0 + \frac{\beta}{1-\beta}\, g^0 . $$
 
-**Multiplier and normalizations.** The static multiplier starts at the
-envelope value
+**Multiplier and co-state entries.** The Lagrange multiplier on the
+static constraint starts at
 
-$$ MS^0 = (1-\beta)\,\frac{\partial\kappa}{\partial D_c}[D^0,X^0], $$
+$$ MS^0 = (1-\beta)\,\kappa_d[D^0,X^0], $$
 
-where $D_c$ is the component of $D^0$ that enters $\kappa$ (the
-consumption margin). The normalizations are $MG^0=1$ and $MX^0=0$.
+taking the derivative with respect to the component of $D^0$ that enters
+$\kappa$ — the corresponding entry of $P^0L^0$ in the first-order
+conditions. The remaining values are set to $MG^0=1$ and $MX^0=0$.
 These objects are placed directly into the `initial_guess` ordering
 already used by `uncertain_expansion`.
 
-**Worked example (Kaltenbrunner–Lochstoer).** The declaration has
-controls $(c^s,i^s)$, state $\omega=\log(Z/K)$. Pass 1 solves
+**Example (Kaltenbrunner–Lochstoer).** The declaration has controls
+$(c^s,i^s)$ and state $\omega=\log(Z/K)$. Step 1 solves
 $\log\left(1-\delta+\phi_J(i^s e^{(1-\alpha)\omega})\right)=g^0$ for
-$i^s$; Pass 2 solves $1-c^s-i^s=0$ for $c^s$; Pass 3 finds that
-$\omega$ cancels out of its own law of motion
-($\omega_{t+1}-\omega_t=\mu-\psi^g$ fixes only the increment), so
-$\omega$ is reported unpinned and goes to the Section 2 grid — only the
-Euler equation, which lives inside the engine's compiled system, can
-determine its level. The utility entries then follow from the closed
-forms. Started this way, the model solves cold in about 27 s; the
-paper's closed-form $\omega$ is an optional accelerator (3 s).
+$i^s$; Step 2 solves $1-c^s-i^s=0$ for $c^s$; Step 3 finds that
+$\omega$ cancels out of its own evolution equation
+($\omega_{t+1}-\omega_t=\mu-\psi^g$ determines only the increment), so
+$\omega$ is reported and goes to the Section 2 grid — only the
+first-order conditions, which live inside the compiled steady-state
+system, can determine its level. The value entries then follow from the
+closed forms. Started this way, the model solves in about 27 s without
+the paper's value; the paper's closed-form $\omega$ is optional and cuts
+this to 3 s.
 
 | entry | construction |
 |---|---|
-| $D^0$, self-pinning components of $X^0$, $\widehat G_{t+1}^0-\widehat G_t^0$, $\widehat C^0-\widehat G^0$, $\widehat V^0-\widehat G^0$, $MS^0$ | model equations |
-| components of $X^0$ not pinned by their own law of motion | multi-start or optional paper value |
-| $MX^0$, $MG^0$ | normalization |
+| $D^0$, components of $X^0$ determined by their own equations, $g^0$, $\widehat C^0-\widehat G^0$, $\widehat V^0-\widehat G^0$, $MS^0$ | model equations |
+| components of $X^0$ not determined by their own equations | grid of trial values, or optional paper value |
+| $MX^0$, $MG^0$ | set to $0$ and $1$ |
 
 ## 2. Solve and acceptance
 
-If a component of $X^0$ cancels from its own fixed-point equation, the
-driver tries a fixed grid of values and reconstructs all other entries of
-`initial_guess` at every grid point. A paper value, when available, is an
-optional alternative starting value. It is always reported separately:
-a cold solve followed by comparison with the paper is an independent
-check; a solve started from the paper value is a consistency check.
+If a component of $X^0$ cancels out of its own steady-state equation,
+`autosolve.py` tries a grid of trial values for it and constructs all
+other entries of `initial_guess` afresh at every grid point. A paper's
+steady-state value, when available, is an optional alternative starting
+value. It is always reported separately: a solve started without paper
+values and then compared with the paper is an independent check; a solve
+started from the paper's value is a consistency check.
 
-The engine then runs its existing root solve. A result is reported only
-when both the model equations and the complete compiled steady-state
-system have residual below $10^{-6}$. Continuation from the default
-parameters is used only when the target parameters do not solve directly.
+The code then runs the existing root solve of `uncertain_expansion`. A
+result is reported only when the model equations and the complete
+compiled steady-state system both hold to within $10^{-6}$. When the
+target parameter values do not solve directly, the code moves one
+parameter at a time from the default values toward the target,
+restarting each solve from the previous solution.
 
-## 3. Numerical geometry
+## 3. The steady-state equations over a grid
 
-Each surface varies one component of $X^0$ and one investment component
-of $D^0$. At every grid point the remaining entries are reconstructed as
-above; the multiplier block is completed by linear least squares. No joint
-nonlinear solve is used to construct the surface. Height and color show
-the base-10 logarithm of the infinity norm of the complete steady-state
-residual.
+Each figure varies one component of $X^0$ and one investment component
+of $D^0$ over a grid. At every grid point the remaining entries are
+constructed as in Section 1, and the multiplier and co-state entries are
+completed by linear least squares — no joint solve is used to construct
+the surface. Height and color show the base-10 logarithm of the largest
+error in the complete steady-state system at that point.
 
-On the floor, green circles reach the verified steady state, orange squares
-reach another root, and red crosses do not converge within the probe
-budget. The large markers are ● unseeded `initial_guess`, ◇ optional paper
-value, ★ lowest sampled residual, and + verified reference steady state.
+On the floor, green circles mark grid points from which
+`uncertain_expansion` reaches the verified steady state, orange squares
+a different solution, and red crosses no convergence within the time
+budget. The large markers are ● the constructed `initial_guess` without
+paper values, ◇ the constructed `initial_guess` with the paper's
+steady-state value, ★ the lowest sampled error, and + the verified
+steady state.
 
-![AK three-dimensional loss landscape](support_material/landscape_ak.png)
+![AK steady-state error surface](support_material/landscape_ak.png)
 
-*Figure 1a. AK: the residual is relatively flat in $Z^2$ and sharply
-localized in the investment decision $D^2$; the unseeded
-`initial_guess` solves without a paper value.*
+*Figure 1a. AK: the error is nearly flat in $Z_2$ and sharply localized
+in the investment choice $D_2$; the constructed `initial_guess` solves
+without a paper value.*
 
-![HABIT three-dimensional loss landscape](support_material/landscape_habit.png)
+![HABIT steady-state error surface](support_material/landscape_habit.png)
 
-*Figure 1b. HABIT: the trough links the habit state $X^0$ to the capital
-investment decision; the unseeded `initial_guess` reaches the appendix
-solution.*
+*Figure 1b. HABIT: the trough links the habit state $X_1$ to the
+capital-investment choice; the constructed `initial_guess` reaches the
+appendix solution.*
 
-![KL three-dimensional loss landscape](support_material/landscape_kl.png)
+![KL steady-state error surface](support_material/landscape_kl.png)
 
-*Figure 1c. KL: the cold starting point lies on the plateau, while the
-optional paper value places $X^0$ close to the sharp low-residual valley.*
+*Figure 1c. KL: the constructed `initial_guess` sits on the flat region;
+the optional paper value places the state next to the narrow trough.*
 
-![ACL three-dimensional loss landscape](support_material/landscape_acl.png)
+![ACL steady-state error surface](support_material/landscape_acl.png)
 
-*Figure 1d. ACL: the admissible region and attraction basin are narrow.
-The cold attempt fails within budget; the paper value is required and the
-result is a consistency check.*
+*Figure 1d. ACL: the region where the construction is defined, and the
+set of starting points from which the solver reaches the verified steady
+state, are both narrow. The attempt without paper values fails within
+its time budget; the paper's values are required, and the result is a
+consistency check.*
 
-![CROCE three-dimensional loss landscape](support_material/landscape_croce.png)
+![CROCE steady-state error surface](support_material/landscape_croce.png)
 
-*Figure 1e. Croce: every sampled admissible starting point reaches the same
-steady state; the paper value only accelerates the solve.*
+*Figure 1e. Croce: every sampled starting point reaches the same steady
+state; the paper's value only speeds up the solve.*
 
-![Tallarini three-dimensional loss landscape](support_material/landscape_tallarini.png)
+![Tallarini steady-state error surface](support_material/landscape_tallarini.png)
 
 *Figure 1f. Tallarini: most sampled starting points reach the verified
-steady state at $\chi=100$; the paper value is optional.*
+steady state at $\chi=100$; the paper's value is optional.*
 
-The surfaces show residual geometry; the floor probes show attraction.
-They do not assert convexity. The grids and probe outcomes are stored in
-`support_material/landscape_*.npz` and reproduced by
-`support_material/make_landscapes.py`.
+The surfaces show the size of the steady-state errors; the floor markers
+show where the solver converges. They do not assert convexity. The
+grids and outcomes are stored in `support_material/landscape_*.npz` and
+reproduced by `support_material/make_landscapes.py`.
 
 ## 4. Numerical record
 
-| model | cold `initial_guess` | optional paper value | validation |
+| model | constructed `initial_guess`, no paper values | optional paper value | validation |
 |---|---|---|---|
-| AK | residual $4.0\times10^{-2}$; solves in 2 s | none | independent; anchor error $7.1\times10^{-6}$ |
-| HABIT | residual $9.3\times10^{-2}$; solves in 12 s | none | appendix replication |
-| KL | residual $8.8\times10^{-1}$; solves in 27 s | solves in 3 s | independent cold check; seeded consistency error $3.3\times10^{-11}$ |
-| ACL | residual $1.3$; cold and grid attempts fail | solves in 70 s | consistency only; error $5.0\times10^{-10}$ |
-| CROCE | residual $3.1\times10^{-1}$; solves in 7 s | solves in 5 s | independent cold check; seeded consistency error $1.6\times10^{-11}$ |
-| TALLARINI | residual $3.3\times10^{-1}$; solves in 2 s | solves in 1 s | independent cold check; $\rho$-convention gap $1.9\times10^{-4}$ |
+| AK | error $4.0\times10^{-2}$; solves in 2 s | none | independent; anchor error $7.1\times10^{-6}$ |
+| HABIT | error $9.3\times10^{-2}$; solves in 12 s | none | appendix replication |
+| KL | error $8.8\times10^{-1}$; solves in 27 s | solves in 3 s | independent check without paper values; with them, consistency error $3.3\times10^{-11}$ |
+| ACL | error $1.3$; fails, directly and from the grid of trial values | solves in 70 s | consistency only; error $5.0\times10^{-10}$ |
+| CROCE | error $3.1\times10^{-1}$; solves in 7 s | solves in 5 s | independent check without paper values; with them, consistency error $1.6\times10^{-11}$ |
+| TALLARINI | error $3.3\times10^{-1}$; solves in 2 s | solves in 1 s | independent check without paper values; $\rho$-convention gap $1.9\times10^{-4}$ |
 
 Five of the six economies solve from the constructed `initial_guess`
 without paper values. ACL is the exception and is labeled accordingly.
-The full ablation record is in `support_material/ablation.json`.
+The full record is in `support_material/ablation.json`.
 
 ## 5. Limits
 
-1. The growth ladder and the equal-investment closing rule for extra
-   capital goods are heuristics.
-2. A component of $X^0$ that cancels from its own fixed-point equation
-   requires multi-start or a supplied value.
-3. Residual checks certify convergence of the compiled system, not correct
-   model specification; the model-class restriction and paper checks remain
-   necessary.
+1. The trial growth values, and the closing of extra investment
+   components in `autosolve.py` (set equal to the investment components
+   from Step 1), are conventions, not derivations.
+2. A component of $X^0$ that cancels out of its own steady-state
+   equation requires the grid of trial values or a supplied paper value.
+3. The two acceptance checks certify numerical convergence of the
+   compiled system, not correct model specification; the model-class
+   restriction and the paper checks remain necessary.

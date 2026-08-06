@@ -332,8 +332,8 @@ TITLE = {"AK": "AK (book §11.7)", "HABIT": "HABIT (book appendix)",
          "CROCE": "CROCE (2008 WP of JME 2014)", "TALLARINI": "TALLARINI (JME 2000)"}
 
 PLOT_LABELS = {
-    "AK": (r"$Z^2$", r"$D^2$"),
-    "HABIT": (r"$X$", r"$i^{mk}$"),
+    "AK": (r"$Z_2$", r"$D_2$"),
+    "HABIT": (r"$X_1$", r"$I_k/K$"),
     "KL": (r"$\omega$", r"$i^s$"),
     "ACL": (r"$\omega^a$", r"$i^s$"),
     "CROCE": (r"$\omega^a$", r"$i^s$"),
@@ -506,10 +506,10 @@ def overview():
         axp.set_title(TITLE[name], fontsize=11)
         axp.set_xlabel(lab[0], fontsize=9); axp.set_ylabel(lab[1], fontsize=9)
         axp.tick_params(labelsize=8)
-    fig.suptitle("Six-model residual landscapes", fontsize=12)
+    fig.suptitle("Error in the steady-state equations, six models", fontsize=12)
     cb = fig.colorbar(plt.cm.ScalarMappable(norm=NORM, cmap=CMAP),
                       ax=axes, shrink=0.8, pad=0.02)
-    cb.set_label(r"$\log_{10}\|F\|_\infty$")
+    cb.set_label(r"$\log_{10}$ max error, steady-state equations")
     out = os.path.join(HERE, "landscapes_overview.png")
     plt.savefig(out, dpi=115, bbox_inches="tight")
     plt.close(fig)

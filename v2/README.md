@@ -11,14 +11,16 @@ $$ \widehat V^0-\widehat G^0,\quad \widehat C^0-\widehat G^0,\quad D^0,\quad MS^
 
 The only substantive change in v2 is that these values are constructed
 from $\kappa,\psi^g,\psi^x,\phi$ when `initial_guess=None`; the expansion
-and root solver are unchanged. Components of $X^0$ not pinned by
+and root solver are unchanged. Components of $X^0$ not determined by
 
 $$ X^0=\psi^x[D^0,X^0,0,0] $$
 
-are handled by multi-start. Paper values, when available, remain optional
-and are reported separately. Continuation is used only for difficult
-parameter targets, and every reported solution must pass both residual
-checks.
+are handled by a grid of trial values. Paper values, when available,
+remain optional and are reported separately. When the target parameter
+values do not solve directly, the code moves one parameter at a time
+from the defaults toward the target, restarting from the previous
+solution; every reported solution must satisfy the model equations and
+the complete steady-state system to within $10^{-6}$.
 
 Six economies are included: the appendix's AK and habit models,
 Kaltenbrunner–Lochstoer, Ai–Croce–Li, Croce, and Tallarini
@@ -29,16 +31,17 @@ exception and is therefore reported as a consistency check.
 
 | file | contents |
 |---|---|
-| [`AUTO_GUESS.md`](AUTO_GUESS.md) | construction, residual surfaces, captions, and numerical record |
-| [`PROVENANCE.md`](PROVENANCE.md) | differences from the upstream appendix engine and frozen hashes |
+| [`AUTO_GUESS.md`](AUTO_GUESS.md) | construction, steady-state error surfaces, and numerical record |
+| [`PROVENANCE.md`](PROVENANCE.md) | differences from the upstream appendix code and frozen hashes |
 | `../v2_demo.ipynb` | model variables, paper equations, calibrations, solves, and paper checks |
-| `support_material/` | six residual surfaces, overview figure, reproducibility script, numerical arrays, ablation record, and hashes |
+| `support_material/` | six error surfaces, overview figure, the script and numerical arrays that reproduce them, the solve record, and hashes |
 
 Start with `support_material/landscapes_overview.png`. Each panel varies
 one component of $X^0$ and one investment component of $D^0$ while
-reconstructing the remaining appendix objects. The surface reports the
-complete steady-state residual; the floor markers report which starting
-points converge. It is numerical validation, not a convexity claim.
+constructing the remaining appendix objects from the model equations.
+The surface reports the error in the complete steady-state system; the
+floor markers report which starting points converge. It is numerical
+validation, not a convexity claim.
 
 The separately tested extension to the first-order-condition assembly is
 not part of v2.
