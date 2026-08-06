@@ -5,6 +5,28 @@ steady-state solve. The v2 entry layer constructs that vector from the model
 declaration when `initial_guess=None`. The expansion and root-solver
 mathematics are unchanged.
 
+The whole algorithm at a glance:
+
+```mermaid
+flowchart TD
+    A["model declaration:<br/>&kappa;, &psi;&#8203;<sup>g</sup>, &psi;&#8203;<sup>x</sup>, &phi;, parameter values"] --> B["set q = 0, set the shock vector to zero,<br/>treat the variables as time invariant"]
+    B --> C["Step 1: investment components of D&#8304;<br/>solve &psi;<sup>g</sup> = g&#8304; &nbsp;(trial value 0.005)"]
+    C --> D["Step 2: consumption components of D&#8304;<br/>solve &phi; = 0"]
+    D --> E["Step 3: each component of X&#8304;<br/>from its own equation X&#8304; = &psi;<sup>x</sup>[D&#8304;, X&#8304;, 0, 0]<br/>(a component that cancels out is left for the grid)"]
+    E --> F["Step 4: remaining components of D&#8304;<br/>through the state equation each enters"]
+    F --> G{"after three repetitions:<br/>positive consumption and Q&#8304; &lt; 1 ?"}
+    G -- "no" --> H["lower g&#8304;:<br/>0.003, 0.002, 0.001, 0.0005, 0.0002"]
+    H --> C
+    G -- "yes" --> I["value entries:<br/>C&#770;&#8304; &minus; G&#770;&#8304; = &kappa;; &nbsp;V&#770;&#8304; &minus; G&#770;&#8304; in closed form"]
+    I --> J["MS&#8304; = (1 &minus; &beta;) &kappa;<sub>d</sub>; &nbsp;MG&#8304; = 1, MX&#8304; = 0"]
+    J --> K["initial_guess assembled<br/>(components of X&#8304; not determined: a grid of<br/>trial values, or the paper's value if supplied)"]
+    K --> L["root solve of uncertain_expansion"]
+    L --> M{"model equations and complete<br/>steady-state system hold to 10&#8315;&#8310; ?"}
+    M -- "yes" --> N["steady state accepted;<br/>compared with the paper's values"]
+    M -- "no" --> O["next grid point, constructing the guess afresh;<br/>if the target parameters do not solve directly,<br/>move one parameter at a time, restarting<br/>from the previous solution"]
+    O --> L
+```
+
 ## 1. Construction in the appendix's notation
 
 The code takes the model in the notation of the computation appendix:
@@ -60,6 +82,24 @@ $$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = 
 
 If no positive-consumption allocation exists at $g^0$, or $Q^0\ge1$,
 the code lowers $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeats.
+
+**The trial growth rate $g^0$.** The default $0.005$ per quarter (about
+two percent a year) is in the range of the growth rates of the six
+calibrations. It is a starting value, not an assumption: the root solve
+determines the growth rate, and any trial value that leaves a
+positive-consumption allocation with $Q^0<1$ leads to the same steady
+state. Varying $g^0$ from $0.001$ to $0.02$ — a factor of twenty —
+moves the solved steady state by less than $10^{-10}$
+(differences relative to the $g^0=0.001$ solution):
+
+| $g^0$ | 0.002 | 0.005 | 0.01 | 0.02 |
+|---|---|---|---|---|
+| AK, largest change in the solved steady state | $7\times10^{-12}$ | $7\times10^{-12}$ | $6\times10^{-12}$ | $6\times10^{-12}$ |
+| KL, largest change in the solved steady state | $7\times10^{-11}$ | $9\times10^{-12}$ | $5\times10^{-12}$ | $5\times10^{-12}$ |
+
+An infeasible trial value — for KL, $g^0=0.02$ gives $Q^0\ge1$ — is
+lowered automatically, and the solution is unchanged. The value can be
+set through `autosolve(..., g_target=...)`.
 
 **Value entries.**
 Input: $(D^0,X^0)$, $g^0$, $Q^0$.
