@@ -143,11 +143,34 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
         # deterministic value recursion converges iff beta*e^((1-rho)g) < 1
         return abs(rho - 1.0) < 1e-6 or beta * np.exp((1 - rho) * g) < 1.0
 
+    # --- declared-trend check (symbolic, at initialization) ---------------
+    # A state equation that depends on its own state only through the growth
+    # equation is the stationarity condition of a declared ratio: it pins the
+    # balanced growth rate, not the state. Read the rate from every such
+    # equation; they must agree, or the declared ratios cannot all be
+    # stationary. The state itself is left to the grid of trial values.
+    cvals = {c: 0.01 for c in ctrl}
+    svals = {s: ov.get(s, 0.0) for s in stat}
+    g_read, g_states = [], []
+    for e, s in zip(states_d, stat):
+        q0 = num(e, ssyms[s], 0.0) - 0.0 + num(growth_d, ssyms[s], 0.0)
+        q1 = num(e, ssyms[s], 1.0) - 1.0 + num(growth_d, ssyms[s], 1.0)
+        if np.isfinite(q0) and np.isfinite(q1) and abs(q1 - q0) < 1e-9:
+            g_read.append(float(q0)); g_states.append(s)
+    if g_read and max(g_read) - min(g_read) > 1e-9:
+        raise ValueError(
+            "the declared trends imply different balanced growth rates: "
+            + ", ".join(f"{g:.6f} (from {s}_t)" for g, s in zip(g_read, g_states))
+            + " — the declared ratios cannot all be stationary")
+    pin_set = set(g_states)
+    g_ladder = ([g_read[0]] if g_read
+                else [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002])
+
     ok = True
     # if the target growth leaves no positive-consumption allocation (or the
     # value recursion diverges there), step it down: the guess must be a
-    # feasible interior point, nothing more
-    for g_target in [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002]:
+    # feasible interior point, nothing more. A model-read rate is not stepped.
+    for g_target in g_ladder:
       cvals = {c: 0.01 for c in ctrl}
       svals = {s: ov.get(s, 0.0) for s in stat}
       ok = True
@@ -170,10 +193,11 @@ def derive_guess(spec, params, n_states, n_shocks, g_target=0.005,
               r = _scan_root(lambda x: num(con, csyms[tgt], x), 1e-8, 1.0)
               if r is not None: cvals[tgt] = r; rem.remove(tgt)
               else: ok = False
-          # states: each equation's own fixed point, wide scan
-          unpinned = []
+          # states: each remaining equation's own fixed point, wide scan;
+          # growth-pinning equations determine no state (handled above)
+          unpinned = [s for s in g_states if s not in ov]
           for e, s in zip(states_d, stat):
-              if s in ov: continue
+              if s in ov or s in pin_set: continue
               r = _scan_root(lambda x: num(e, ssyms[s], x) - x, -30.0, 30.0)
               if r is not None: svals[s] = r
               else:

@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1786049695.41261 "/Users/kunjianli/Documents/MFR/quantmfr-ch11-demo/v2/support_material/flowchart.tex" "flowchart.pdf" "flowchart" 1786049695.88525 0
-  "/Users/kunjianli/Documents/MFR/quantmfr-ch11-demo/v2/support_material/flowchart.tex" 1786049695.11648 3081 6fdc23209540758017d0a7cb52ef0dc4 ""
+["pdflatex"] 1786130827.68155 "/Users/kunjianli/Documents/MFR/quantmfr-ch11-demo/v2/support_material/flowchart.tex" "flowchart.pdf" "flowchart" 1786130828.35552 0
+  "/Users/kunjianli/Documents/MFR/quantmfr-ch11-demo/v2/support_material/flowchart.tex" 1786130827.40932 3164 d87cb9fd7dea28e5b25729a9dc2f9243 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbx9.tfm" 1136768653 1328 5442e22a7072966dbaf88ca900acf3f0 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmmi6.tfm" 1136768653 1512 f21f83efb36853c0b70002322c1ab3ad ""
@@ -119,8 +119,8 @@
   "/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1784055103 5573038 b99aad5e4898a9034e953632f940512b ""
   "/usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt" 1774209607 3636776 dc5fa9b6b1453b9d196cd42edf876004 ""
   "/usr/local/texlive/2026/texmf.cnf" 1774209515 577 648cd9f92f9c0eac486f4c71c85cfbbe ""
-  "flowchart.aux" 1786049695.84762 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
-  "flowchart.tex" 1786049695.11648 3081 6fdc23209540758017d0a7cb52ef0dc4 ""
+  "flowchart.aux" 1786130828.31156 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "flowchart.tex" 1786130827.40932 3164 d87cb9fd7dea28e5b25729a9dc2f9243 ""
   (generated)
   "flowchart.aux"
   "flowchart.log"

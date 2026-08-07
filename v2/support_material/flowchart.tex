@@ -27,8 +27,9 @@
   {set $\mathsf q=0$, set the shock vector to zero, treat the variables as
    time invariant};
 \node[box, below=4.5mm of det] (steps)
-  {Start with a trial value of $g^0$, components of $D^0$ at $0.01$,\\
-   components of $X^0$ at $0$, and perform the following steps:\\[2pt]
+  {Read $g^0$ from the state equations that pin it, checking they agree\\
+   (a trial value $0.005$ if none does); start components of $D^0$ at\\
+   $0.01$, components of $X^0$ at $0$, and perform the following steps:\\[2pt]
    \textbf{Step 1}\ \ solve for investment components of $D^0$ from $\psi^g=g^0$\\[2pt]
    \textbf{Step 2}\ \ solve for consumption components of $D^0$ from $\phi=0$\\[2pt]
    \textbf{Step 3}\ \ solve for components of $X^0$, each from its\\

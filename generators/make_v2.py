@@ -28,11 +28,11 @@ The engine in `v2/` is the book's expansion code (the robust steady-state varian
 | AK | book, Section 11.7 | $\gamma = 8$ | yes (no seeds exist) |
 | HABIT | book, computation appendix | $\gamma = 8$, $\lambda = 0.67$, $\tau = 0.01$ | yes (no seeds exist) |
 | KL | Kaltenbrunner & Lochstoer, *RFS* 2010 (LRR II) | $\gamma = 5$, $\rho = 2/3$ | yes |
-| ACL | Ai, Croce & Li, *RFS* 2013 (Extension 1) | $\gamma = 10$, $\rho = 0.5$ | **no — needs the paper seed** |
+| ACL | Ai, Croce & Li, *RFS* 2013 (Extension 1) | $\gamma = 10$, $\rho = 0.5$ | yes (about 6 minutes) |
 | CROCE | Croce, *JME* 2014 (fixed-labor WP version) | $\gamma = 30$, $\rho = 0.5$ | yes |
 | TALLARINI | Tallarini, *JME* 2000 | $\chi = \gamma = 100$, $\rho \approx 1$ | yes |
 
-"Cold" means the constructed guess alone, no seeds. **Five of the six economies solve cold**; the two-capital ACL model is the honest exception — the automatic guess alone is rejected by the residual gates, and it is solved with the paper's closed-form steady-state values as seeds, so all ACL results are consistency checks against that paper. The Solve section reports the two modes separately for every model.
+"Cold" means the constructed guess alone, no seeds. **All six economies solve cold.** The two-capital ACL model required the paper's values until the initialization learned to read the balanced growth rate from the declared trends; it now solves cold in about six minutes, and the paper's values remain an optional accelerator (about 70 s). The Solve section reports the two modes separately for every model.
 
 All models run at a **quarterly** frequency; conversions from each paper's native frequency use standard rules stated in each model's section. Runtime: about 60 minutes on Colab (the correlation battery is the bulk).'''))
 
@@ -446,7 +446,7 @@ with $G_t \equiv G(I_t,S_t)$, $H_t \equiv H(J_t,K_t)$, and $H_t/K_t = \tfrac{a_1
 
 Status refers to the native value; every quarterly entry follows mechanically from its stated rule. Table C.2 prints $\beta$ and $\sigma_x$ rounded (0.97, 0.86%); we use the BH working values 0.971 and 0.008636 — with $\beta = 0.971$ (not 0.97) the normalization below reproduces the BH printed $a_1, a_2$ exactly.
 
-**Anchors — all consistency checks, not independent validation.** At the deterministic steady state $\varpi = 1$, $H_J = 1$ so the blueprint price is $q_S = 1/H_J = 1$ (their modified conditions, ms. p. 41), and — a by-product of the normalization — $H_K = 0$, so the $H_{K,t}\,q_{S,t}$ term in the Extension-1 modified $p_{K,t}$ (ms. p. 41) vanishes and the baseline tangible-capital pricing applies at the steady state. The BH Dynare file solves the entire steady state in closed form; the chain is frequency-generic (evaluated at the annual parameters it reproduces BH Table 1's $a_1 = 0.6645$, $a_2 = -0.0324$ to all printed digits). With $\bar G/\bar S$ and $G_I$ evaluated from Eq. (21) at $\bar I/\bar S$:
+**Anchors.** The cold solve reaches these values without them (an independent check); a seeded solve is a consistency check. At the deterministic steady state $\varpi = 1$, $H_J = 1$ so the blueprint price is $q_S = 1/H_J = 1$ (their modified conditions, ms. p. 41), and — a by-product of the normalization — $H_K = 0$, so the $H_{K,t}\,q_{S,t}$ term in the Extension-1 modified $p_{K,t}$ (ms. p. 41) vanishes and the baseline tangible-capital pricing applies at the steady state. The BH Dynare file solves the entire steady state in closed form; the chain is frequency-generic (evaluated at the annual parameters it reproduces BH Table 1's $a_1 = 0.6645$, $a_2 = -0.0324$ to all printed digits). With $\bar G/\bar S$ and $G_I$ evaluated from Eq. (21) at $\bar I/\bar S$:
 
 $$\frac{\bar I}{\bar S} = \left[\frac{\nu}{1-\nu}\left(\frac{e^{\rho\mu}}{\beta} - 1 + \delta_S\right)\right]^{\eta}\ \text{(their intangible return, ms. p. 41, at } \bar r_S = e^{\rho\mu}/\beta\text{)}; \qquad \frac{\bar J}{\bar S} = e^{\mu} - (1-\delta_S)\left(1 - \frac{\bar G}{\bar S}\right)\ \text{(ss of Eq. (29) with } H = J\text{)};$$
 
@@ -456,7 +456,7 @@ which then delivers $\bar S/\bar K$, $\bar J/\bar K$, and finally $a_1 = (\bar J
 
 **Limitations / restrictions.** (i) We solve the aggregate planner formulation as written by BH; the cross-sectional content of the paper (vintage portfolios, book-to-market sorts) is outside this representation. (ii) Fixed labor $N_t = 1$ is Extension 1 itself, not our restriction. (iii) The annual-to-quarterly conversion is ours — both papers calibrate annually, the lineup runs quarterly — and $a_1, a_2$ are therefore recomputed at the quarterly parameters, not converted. (iv) $\beta = 0.971$ and $\sigma_x = 0.8636\%$ are BH working values rather than the rounded Table C.2 prints. (v) $\gamma = 10$ is reached by the engine's continuation from 1.001.
 
-**Solve status: the one model that does NOT solve cold — the automatic guess alone is rejected by the residual gates and blind multi-start over three states exhausts its budget; with the paper-derived closed-form seeds it solves in about 70 s. All ACL anchors are consistency checks against the Borovička–Hansen steady-state chain, not independent validation.**'''))
+**Solve status: solves cold in about six minutes — the automatic guess alone, once the initialization reads the balanced growth rate from the declared trends; the paper-derived closed-form seeds remain an optional accelerator (about 70 s). Cold agreement with the Borovička–Hansen steady-state chain is an independent check; a seeded solve is a consistency check.**'''))
 
 cells.append(md(r'''### CROCE — Croce (*JME* 2014), fixed-labor benchmark (2008 working-paper version)
 
@@ -653,7 +653,7 @@ cells.append(md(r'''## Solve
 
 Each accepted solution passes two residual gates — the model's own deterministic equations and the engine's complete steady-state system, both to $10^{-6}$ — and is then compared against its paper anchors. The gates certify convergence, not specification; the anchors are the external check.
 
-One honest exception: for ACL the cold attempt fails (the direct solve is rejected by the gates after about 6 minutes and blind multi-start over three states exhausts its budget — about 37 minutes total). That failure was recorded once under the same protocol in `v2/support_material/ablation.json` and is reported from the record below; set `RUN_ACL_COLD = True` to reproduce it live.
+ACL is the slow one: its cold solve takes about six minutes, most of the first-pass runtime.
 
 **Second pass** — the correlation battery: every multi-shock model under the five $\Sigma$ structures plus a rotated twin per cell; single-shock models at their published loading plus the sign-flip twin. The battery uses the seeds throughout for speed — what the construction does on its own is established by the first pass. For the first-pass solutions we also compute consumption-growth exposure and price elasticities (first shock, median state, 160 quarters — the construction of Figures 11.1–11.3).'''))
 
@@ -679,8 +679,6 @@ ANCH = {
                   "wx_t": MODELS["TALLARINI"]["seeds"]["wx"]},
 }
 
-RUN_ACL_COLD = False   # True reproduces the recorded ACL cold failure live (~37 min)
-
 def _anchor_err(r, M, T, name):
     ss = np.asarray(r["ss"], float)
     names = [str(n) for n in _ss_names(M["build"](T), M["n_states"], M["n_shocks"])][1:]
@@ -694,21 +692,14 @@ for name in ORDER:
     row = {"model": name}
 
     # --- cold: constructed guess alone, no seeds -------------------------
-    if name == "ACL" and not RUN_ACL_COLD:
-        row.update(cold=False, cold_secs=2229,
-                   cold_note="recorded failure (support_material/ablation.json): "
-                             "direct solve REJECTED by the residual gates at 370 s; "
-                             "multi-start over three states exhausted its budget")
-        r_cold = None
+    t1 = time.time()
+    r_cold, msg = autosolve(M["build"], M["defaults"], T,
+                            M["n_states"], M["n_shocks"], timeout=600)
+    row.update(cold=r_cold is not None, cold_secs=round(time.time() - t1))
+    if r_cold is None:
+        row["cold_note"] = msg
     else:
-        t1 = time.time()
-        r_cold, msg = autosolve(M["build"], M["defaults"], T,
-                                M["n_states"], M["n_shocks"], timeout=600)
-        row.update(cold=r_cold is not None, cold_secs=round(time.time() - t1))
-        if r_cold is None:
-            row["cold_note"] = msg
-        else:
-            row["cold_anchor_err"] = _anchor_err(r_cold, M, T, name)
+        row["cold_anchor_err"] = _anchor_err(r_cold, M, T, name)
 
     # --- seed-assisted: only where the paper provides closed forms -------
     r_seed = None
@@ -818,8 +809,8 @@ fig.tight_layout(); plt.show()'''))
 
 cells.append(md(r'''**Reading the results.**
 
-- **Five of the six economies solve cold** — the constructed guess alone, no seeds — at their published preference targets, risk aversion up to $\chi = 100$, and their cold steady states match the papers' own restrictions (independent checks: the papers' numbers were never given to the solver). The AK and TALLARINI anchor entries reflect the $\rho = 1.001$ convention against $\rho = 1$ closed forms; HABIT has no paper anchor and is validated as a book replication.
-- **ACL is the honest exception**: the cold attempt fails (recorded in `v2/support_material/ablation.json`), and the model is solved with the Borovička–Hansen closed-form values as seeds — so its $\sim 10^{-10}$ anchor agreement is a consistency check against that chain, not independent validation.
+- **All six economies solve cold** — the constructed guess alone, no seeds — at their published preference targets, risk aversion up to $\chi = 100$, and their cold steady states match the papers' own restrictions (independent checks: the papers' numbers were never given to the solver). The AK and TALLARINI anchor entries reflect the $\rho = 1.001$ convention against $\rho = 1$ closed forms; HABIT has no paper anchor and is validated as a book replication.
+- **ACL was the exception until the initialization read the growth rate from the declared trends**: it now solves cold in about six minutes to the Borovička–Hansen steady state, an independent check; the paper's values remain an optional accelerator (about 70 s).
 - The correlation battery: order 0 is identical, digit for digit, across all $\Sigma$ structures and under rotations (both columns exactly zero), while $|\mu^0|$ moves with the correlations — largest where bad capital shocks bundle with bad long-run news. Elasticity term structures are smooth and settle in every economy.
 - Two structural facts about the engine's model class were established while building this notebook and are stated in the Model section: the resource constraint must be of the share form (hence the output-share declarations), and an endogenous labor choice lies outside the current class. Both are exactly the kind of thing an entry layer can check or restate automatically — which is the point of `v2`.'''))
 

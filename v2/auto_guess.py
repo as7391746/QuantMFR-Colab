@@ -84,10 +84,35 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
         # the deterministic value recursion converges iff beta*e^((1-rho)g) < 1
         return abs(rho - 1.0) < 1e-6 or beta * np.exp((1 - rho) * g) < 1.0
 
+    # --- declared-trend check (symbolic, at initialization) ---------------
+    # A state equation that depends on its own state only through the growth
+    # equation is the stationarity condition of a declared ratio: it pins the
+    # balanced growth rate, not the state. Read the rate from every such
+    # equation; they must agree, or the declared ratios cannot all be
+    # stationary. The state itself keeps its neutral value here.
+    cvals = {c: 0.01 for c in ctrl}
+    svals = {s: 0.0 for s in stat}
+    g_read, g_states = [], []
+    for e, s in zip(states_d, stat):
+        q0 = num(e, ssym[s], 0.0) - 0.0 + num(growth_d, ssym[s], 0.0)
+        q1 = num(e, ssym[s], 1.0) - 1.0 + num(growth_d, ssym[s], 1.0)
+        if np.isfinite(q0) and np.isfinite(q1) and abs(q1 - q0) < 1e-9:
+            g_read.append(float(q0)); g_states.append(s)
+    if g_read and max(g_read) - min(g_read) > 1e-9:
+        raise ValueError(
+            "auto_guess: the declared trends imply different balanced growth "
+            "rates: "
+            + ", ".join(f"{g:.6f} (from {s})" for g, s in zip(g_read, g_states))
+            + " — the declared ratios cannot all be stationary")
+    pin_set = set(g_states)
+    g_ladder = ([g_read[0]] if g_read
+                else [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002])
+
     # step the target growth down if it admits no positive-consumption
     # interior point, or if the value recursion diverges at that growth rate
+    # (a model-read rate is not stepped)
     interior = False
-    for g_try in [g_target, 0.003, 0.002, 0.001, 0.0005, 0.0002]:
+    for g_try in g_ladder:
       g_target = g_try
       cvals = {c: 0.01 for c in ctrl}
       svals = {s: 0.0 for s in stat}
@@ -112,6 +137,8 @@ def derive_initial_guess(ss_variables, control_variables, state_variables,
                   cvals[tgt] = r
                   rem.remove(tgt)
           for e, s in zip(states_d, stat):
+              if s in pin_set:
+                  continue      # growth-pinning equation: determines no state
               r = _scan_root(lambda x: num(e, ssym[s], x) - x, -30.0, 30.0)
               if r is not None:
                   svals[s] = r

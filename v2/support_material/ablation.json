@@ -4,7 +4,7 @@
   "config": "legacy hand guess",
   "init_res": 1.509038397863689,
   "ok": true,
-  "secs": 7,
+  "secs": 6,
   "final_res": 6.661338147750939e-16,
   "note": ""
  },
@@ -22,26 +22,26 @@
   "config": "auto + multi-start",
   "init_res": NaN,
   "ok": true,
-  "secs": 3,
+  "secs": 2,
   "final_res": 1.5776269179923474e-13,
-  "note": ""
+  "note": "OK (direct)"
  },
  {
   "model": "AK",
   "config": "full automatic layer",
   "init_res": NaN,
   "ok": true,
-  "secs": 3,
+  "secs": 2,
   "final_res": 1.5776269179923474e-13,
-  "note": ""
+  "note": "OK (direct)"
  },
  {
   "model": "HABIT",
   "config": "auto guess only",
   "init_res": 0.0932232763351059,
   "ok": true,
-  "secs": 12,
-  "final_res": 1.0940581773866143e-11,
+  "secs": 11,
+  "final_res": 1.0939693595446442e-11,
   "note": ""
  },
  {
@@ -50,8 +50,8 @@
   "init_res": NaN,
   "ok": true,
   "secs": 12,
-  "final_res": 1.0940581773866143e-11,
-  "note": ""
+  "final_res": 1.0939693595446442e-11,
+  "note": "OK (direct)"
  },
  {
   "model": "HABIT",
@@ -59,16 +59,16 @@
   "init_res": NaN,
   "ok": true,
   "secs": 12,
-  "final_res": 1.0940581773866143e-11,
-  "note": ""
+  "final_res": 1.0939693595446442e-11,
+  "note": "OK (direct)"
  },
  {
   "model": "KL",
   "config": "auto guess only",
-  "init_res": 0.8825520270310059,
+  "init_res": 0.9932909130541259,
   "ok": true,
-  "secs": 27,
-  "final_res": 1.077804512306102e-12,
+  "secs": 22,
+  "final_res": 1.0483036660957623e-10,
   "note": ""
  },
  {
@@ -76,17 +76,17 @@
   "config": "auto + multi-start",
   "init_res": NaN,
   "ok": true,
-  "secs": 27,
-  "final_res": 1.077804512306102e-12,
-  "note": ""
+  "secs": 23,
+  "final_res": 1.0483036660957623e-10,
+  "note": "OK (direct)"
  },
  {
   "model": "KL",
   "config": "auto + paper seed",
-  "init_res": 0.06764934378648772,
+  "init_res": 0.06792023310647556,
   "ok": true,
-  "secs": 3,
-  "final_res": 6.232002761064059e-13,
+  "secs": 1,
+  "final_res": 2.8244481406480837e-12,
   "note": ""
  },
  {
@@ -94,35 +94,35 @@
   "config": "full automatic layer",
   "init_res": NaN,
   "ok": true,
-  "secs": 4,
-  "final_res": 6.232002761064059e-13,
-  "note": ""
+  "secs": 2,
+  "final_res": 2.8244481406480837e-12,
+  "note": "OK (direct)"
  },
  {
   "model": "ACL",
   "config": "auto guess only",
-  "init_res": 1.2732190549516442,
+  "init_res": 0.8615773606069119,
   "ok": false,
-  "secs": 370,
+  "secs": 274,
   "final_res": NaN,
-  "note": "REJECTED: returned root fails the model's own equations (res"
+  "note": "REJECTED: returned root fails the model's own equations (residual 6.9e-04)"
  },
  {
   "model": "ACL",
   "config": "auto + multi-start",
   "init_res": NaN,
-  "ok": false,
-  "secs": 2229,
-  "final_res": NaN,
-  "note": "anchor solve failed (multi-start over ['wa', 's', 'x'] stopp"
+  "ok": true,
+  "secs": 369,
+  "final_res": 1.0203732823954592e-11,
+  "note": "OK (direct)"
  },
  {
   "model": "ACL",
   "config": "auto + paper seed",
-  "init_res": 0.2728315004089032,
+  "init_res": 0.27283150040890325,
   "ok": true,
-  "secs": 70,
-  "final_res": 1.2502646487555502e-12,
+  "secs": 69,
+  "final_res": 1.2502325563712446e-12,
   "note": ""
  },
  {
@@ -131,16 +131,16 @@
   "init_res": NaN,
   "ok": true,
   "secs": 72,
-  "final_res": 1.2502646487555502e-12,
-  "note": ""
+  "final_res": 1.2502325563712446e-12,
+  "note": "OK (direct)"
  },
  {
   "model": "CROCE",
   "config": "auto guess only",
-  "init_res": 0.3068580978151144,
+  "init_res": 0.309228801085361,
   "ok": true,
-  "secs": 7,
-  "final_res": 1.325606291402437e-13,
+  "secs": 6,
+  "final_res": 1.8052226380405045e-13,
   "note": ""
  },
  {
@@ -148,17 +148,17 @@
   "config": "auto + multi-start",
   "init_res": NaN,
   "ok": true,
-  "secs": 8,
-  "final_res": 1.325606291402437e-13,
-  "note": ""
+  "secs": 6,
+  "final_res": 1.8052226380405045e-13,
+  "note": "OK (direct)"
  },
  {
   "model": "CROCE",
   "config": "auto + paper seed",
-  "init_res": 0.06030958212704347,
+  "init_res": 0.06049278927277389,
   "ok": true,
-  "secs": 5,
-  "final_res": 5.776108757959975e-14,
+  "secs": 3,
+  "final_res": 3.536626200228987e-11,
   "note": ""
  },
  {
@@ -166,35 +166,35 @@
   "config": "full automatic layer",
   "init_res": NaN,
   "ok": true,
-  "secs": 5,
-  "final_res": 5.776108757959975e-14,
-  "note": ""
+  "secs": 3,
+  "final_res": 3.536626200228987e-11,
+  "note": "OK (direct)"
  },
  {
   "model": "TALLARINI",
   "config": "auto guess only",
-  "init_res": 0.3250113499858039,
-  "ok": true,
-  "secs": 2,
-  "final_res": 2.9805047319086952e-12,
-  "note": ""
- },
- {
-  "model": "TALLARINI",
-  "config": "auto + multi-start",
-  "init_res": NaN,
-  "ok": true,
-  "secs": 2,
-  "final_res": 2.9805047319086952e-12,
-  "note": ""
- },
- {
-  "model": "TALLARINI",
-  "config": "auto + paper seed",
-  "init_res": 0.08450915121909364,
+  "init_res": 0.3668438998987892,
   "ok": true,
   "secs": 1,
-  "final_res": 5.00382721368986e-13,
+  "final_res": 1.0969003483296547e-13,
+  "note": ""
+ },
+ {
+  "model": "TALLARINI",
+  "config": "auto + multi-start",
+  "init_res": NaN,
+  "ok": true,
+  "secs": 1,
+  "final_res": 1.0969003483296547e-13,
+  "note": "OK (direct)"
+ },
+ {
+  "model": "TALLARINI",
+  "config": "auto + paper seed",
+  "init_res": 0.08474797154238511,
+  "ok": true,
+  "secs": 1,
+  "final_res": 1.1278218289834108e-10,
   "note": ""
  },
  {
@@ -202,8 +202,8 @@
   "config": "full automatic layer",
   "init_res": NaN,
   "ok": true,
-  "secs": 2,
-  "final_res": 5.00382721368986e-13,
-  "note": ""
+  "secs": 1,
+  "final_res": 1.1278218289834108e-10,
+  "note": "OK (direct)"
  }
 ]

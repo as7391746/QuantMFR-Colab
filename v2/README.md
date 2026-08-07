@@ -31,8 +31,10 @@ solve started from them is a consistency check.
 
 We include six economies: the appendix's AK and habit models,
 Kaltenbrunner–Lochstoer, Ai–Croce–Li, Croce, and Tallarini
-($\chi=100$). Five solve without paper values; Ai–Croce–Li is the
-exception and we report it as a consistency check.
+($\chi=100$). All six solve without paper values — Ai–Croce–Li in
+about six minutes, once the initialization reads the balanced growth
+rate from the declared trends; the papers' values remain optional
+accelerators, and runs with them are reported as consistency checks.
 
 ## Files
 

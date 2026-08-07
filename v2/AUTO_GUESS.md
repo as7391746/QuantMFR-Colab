@@ -5,14 +5,12 @@ steady-state solve. The v2 entry layer constructs that vector from the model
 declaration when `initial_guess=None`. The expansion and root-solver
 mathematics are unchanged.
 
-The construction is a
-[Gauss–Seidel](https://en.wikipedia.org/wiki/Gauss%E2%80%93Seidel_method)-style
-coordinate-by-coordinate calculation: we solve for each entry of the
-starting vector from the single model equation that most directly
-determines it, one entry at a time and repeatedly, always using the
-latest values of the other entries. We never solve a joint system.
-Entries that no single equation determines are searched over a grid
-(Section 2).
+The construction is a coordinate-by-coordinate calculation: we solve
+for each entry of the starting vector from the single model equation
+that most directly determines it, one entry at a time and repeatedly,
+always using the latest values of the other entries. We never solve a
+joint system. Entries that no single equation determines are searched
+over a grid (Section 2).
 
 The whole algorithm at a glance:
 
@@ -29,14 +27,21 @@ $$0 =\phi[D_t(\mathsf q),X_t(\mathsf q)]. $$
 
 Set $\mathsf q=0$, set the shock vector to zero, and treat the variables
 as time invariant; write $g^0=\widehat G_{t+1}^0-\widehat G_t^0$ for the
-trial growth rate (default $0.005$). The auto guess initializes every
-$D^0$ component at $0.01$ and every $X^0$ component at $0$. The zero is
-only a starting point. (Our Step 3 searches a wide interval for each
-root, so a component whose own equation places it far from zero is
-still found, and for a mean-zero state zero is the steady state
-itself.) The steps below overwrite these values one component at a
-time, and we run these steps repeatedly. We do not solve the joint
-system here.
+growth rate. Before the steps, we check each state equation
+symbolically: an equation that depends on its own state only through the
+growth equation is the stationarity condition of a declared ratio — it
+pins $g^0$, and we read $g^0$ from it. All such equations must agree;
+if they imply different rates, the declared ratios cannot all be
+stationary, and we stop and report which equations disagree. When no
+equation pins $g^0$, we use a trial value (default $0.005$).
+
+The auto guess initializes every $D^0$ component at $0.01$ and every
+$X^0$ component at $0$. The zero is only a starting point. (Our Step 3
+searches a wide interval for each root, so a component whose own
+equation places it far from zero is still found, and for a mean-zero
+state zero is the steady state itself.) The steps below overwrite these
+values one component at a time, and we run these steps repeatedly. We
+do not solve the joint system here.
 
 **Step 1 — investment components of $D^0$.**
 Input: the trial growth rate $g^0$; the current values of the other
@@ -60,9 +65,8 @@ equation
 
 $$ X_j^0=\psi_j^x[D^0,X^0,0,0] . $$
 
-A component that cancels out of its own equation (for example, a
-degree-0 ratio) will not be overwritten here; it is handled in
-[Section 2](#2-solve-and-acceptance).
+A state whose equation pins $g^0$ (see above) is not determined here;
+it is handled in [Section 2](#2-solve-and-acceptance).
 
 **Step 4 — remaining components of $D^0$.**
 Input: the values from Steps 1–3.
@@ -74,7 +78,8 @@ These four steps repeat multiple rounds. To verify the output, we construct
 $$ Q^0 = \beta\exp\left[(1-\rho)\left(\widehat R^0-\widehat V^0\right)\right] = \beta\exp\left[(1-\rho)\,g^0\right]. $$
 
 If no positive-consumption allocation exists at $g^0$, or $Q^0\ge1$,
-we lower $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeat.
+we lower $g^0\in\{0.003,0.002,0.001,0.0005,0.0002\}$ and repeat
+(a trial $g^0$ only; a rate read from the model is not adjusted).
 
 **Value entries.**
 Input: $(D^0,X^0)$, $g^0$, $Q^0$.
@@ -170,9 +175,9 @@ the optional paper value places the state next to the narrow trough.*
 
 *Figure 1d. ACL: the region where the construction is defined, and the
 set of starting points from which the solver reaches the verified steady
-state, are both narrow. The attempt without paper values fails within
-its time budget; the paper's values are required, and the result is a
-consistency check.*
+state, are both narrow. With the growth rate read from the declared
+trends, the constructed `initial_guess` solves without paper values in
+about six minutes; the paper's values cut this to about 74 s.*
 
 ![CROCE steady-state error surface](support_material/landscape_croce.png)
 
@@ -195,14 +200,21 @@ reproduced by `support_material/make_landscapes.py`.
 |---|---|---|---|
 | AK | error $4.0\times10^{-2}$; solves in 2 s | none | independent; anchor error $7.1\times10^{-6}$ |
 | HABIT | error $9.3\times10^{-2}$; solves in 12 s | none | appendix replication |
-| KL | error $8.8\times10^{-1}$; solves in 27 s | solves in 3 s | independent check without paper values; with them, consistency error $3.3\times10^{-11}$ |
-| ACL | error $1.3$; fails, directly and from the grid of trial values | solves in 70 s | consistency only; error $5.0\times10^{-10}$ |
+| KL | error $9.9\times10^{-1}$; solves in 24 s | solves in 3 s | independent check without paper values; with them, a consistency check |
+| ACL | error $8.6\times10^{-1}$; solves in about 6 minutes | solves in about 73 s | independent check without paper values; with them, a consistency check |
 | CROCE | error $3.1\times10^{-1}$; solves in 7 s | solves in 5 s | independent check without paper values; with them, consistency error $1.6\times10^{-11}$ |
-| TALLARINI | error $3.3\times10^{-1}$; solves in 2 s | solves in 1 s | independent check without paper values; $\rho$-convention gap $1.9\times10^{-4}$ |
+| TALLARINI | error $3.7\times10^{-1}$; solves in 2 s | solves in 1 s | independent check without paper values; $\rho$-convention gap $1.9\times10^{-4}$ |
 
-Five of the six economies solve from the constructed `initial_guess`
-without paper values. ACL is the exception and is labeled accordingly.
-The solved steady state does not depend on the trial value $g^0$:
-varying it from $0.001$ to $0.02$ moves the solved AK and KL steady
-states by less than $10^{-10}$, and an infeasible value is lowered
-automatically. The full record is in `support_material/ablation.json`.
+All six economies solve from the constructed `initial_guess` without
+paper values; ACL — formerly the exception — does so once the growth
+rate is read from its declared trends, in about six minutes. ACL's cold
+solve is near the edge of the direct solve's budget: across repeated
+runs most attempts succeed directly and one was rejected, with the
+driver's restarts covering such cases; the intangible-capital ratio is
+a nearly flat direction, and accepted runs land between $10^{-9}$ and
+$10^{-4}$ of the Borovička–Hansen value. Where the
+rate is read from the model, no trial value is involved; where growth
+is endogenous (AK, HABIT), varying the trial value from $0.001$ to
+$0.02$ moves the solved AK steady state by less than $10^{-10}$, and an
+infeasible value is lowered automatically. The full record is in
+`support_material/ablation.json`.

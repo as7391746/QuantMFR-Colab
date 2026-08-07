@@ -27,7 +27,7 @@ The book's expansion engine requires a hand-built starting vector for its
 steady-state solve. [`v2/`](v2/) removes that requirement: the starting
 vector is constructed from the model declaration itself, with the solver
 mathematics untouched. Six published production economies are the test
-bed; five solve from the constructed guess alone.
+bed; all six solve from the constructed guess alone.
 
 - [`v2/README.md`](v2/README.md) — what changed, in one page
 - [`v2/AUTO_GUESS.md`](v2/AUTO_GUESS.md) — the construction, its
