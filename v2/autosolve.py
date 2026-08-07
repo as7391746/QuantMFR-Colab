@@ -410,6 +410,18 @@ def autosolve(build_spec, anchor, target, n_states, n_shocks,
         say(f"target guess derived from state seeds {state_seeds}")
     else:
         gt, gtok, _, unpt = derive_guess(spect, pt, n_states, n_shocks)
+    # v2.1: natural-matching construction — the remaining choice margins
+    # solved against their own first-order conditions. When it lands (the
+    # constructed point satisfies the full steady-state system), it
+    # replaces the typed guess; otherwise the existing pipeline proceeds.
+    try:
+        from natural_guess import construct
+        xnm, enm, _nm = construct(spect, pt, n_states, n_shocks)
+        if xnm is not None and np.isfinite(enm) and enm < 1e-6:
+            gt = np.asarray(xnm, float)
+            say(f"natural-matching construction landed (residual {enm:.1e})")
+    except Exception as _e:
+        say(f"natural-matching construction unavailable ({type(_e).__name__})")
     rt, errt = _solve_checked(spect, pt, ss_names, gt, timeout)
     if rt is None:
         # grid-restart over states: unpinned ones first; if none were

@@ -1,4 +1,4 @@
-% Flow chart of the automatic initial guess (AUTO_GUESS.md).
+% Flow chart of the automatic initial guess (AUTO_GUESS.md), v2.1.
 % Compile: pdflatex flowchart.tex ; then rasterize to flowchart.png.
 \documentclass[tikz,border=6pt]{standalone}
 \usetikzlibrary{arrows.meta,positioning}
@@ -9,54 +9,43 @@
               align=left, inner sep=6pt, text width=8.8cm},
   dec/.style={rectangle, rounded corners=2pt, draw=black!70, very thick,
               fill=orange!8, align=left, inner sep=6pt, text width=8.8cm},
-  fin/.style={rectangle, rounded corners=2pt, draw=black!70, fill=green!7,
-              align=left, inner sep=6pt, text width=8.8cm},
-  rbox/.style={rectangle, rounded corners=2pt, draw=black!70, fill=blue!4,
-              align=left, inner sep=6pt, text width=6.6cm},
-  rdec/.style={rectangle, rounded corners=2pt, draw=black!70, very thick,
-              fill=orange!8, align=left, inner sep=6pt, text width=6.6cm},
   lp/.style={rectangle, rounded corners=2pt, draw=black!70, fill=black!4,
-             align=center, inner sep=5pt, font=\footnotesize},
+             align=center, inner sep=5pt, font=\footnotesize, text width=3.2cm},
   a/.style={-{Latex[length=2.6mm]}, semithick},
   lbl/.style={font=\footnotesize, inner sep=2pt, fill=white}
 ]
 
-% ---------------- left column: construction ----------------
 \node[box] (decl) {model declaration: $\kappa,\ \psi^g,\ \psi^x,\ \phi$, parameter values};
 \node[box, below=4.5mm of decl] (det)
   {set $\mathsf q=0$, set the shock vector to zero, treat the variables as
    time invariant};
-\node[box, below=4.5mm of det] (steps)
-  {Read $g^0$ from the state equations that pin it, checking they agree\\
-   (a trial value $0.005$ if none does); start components of $D^0$ at\\
-   $0.01$, components of $X^0$ at $0$, and perform the following steps:\\[2pt]
-   \textbf{Step 1}\ \ solve for investment components of $D^0$ from $\psi^g=g^0$\\[2pt]
-   \textbf{Step 2}\ \ solve for consumption components of $D^0$ from $\phi=0$\\[2pt]
-   \textbf{Step 3}\ \ solve for components of $X^0$, each from its\\
-   \hspace*{1.35cm}own equation $X_j^0=\psi_j^x[D^0,X^0,0,0]$\\[2pt]
-   \textbf{Step 4}\ \ solve for the remaining components of $D^0$,\\
-   \hspace*{1.35cm}through the state equation each enters\\[3pt]
-   (repeated three times)};
-\node[dec, below=4.5mm of steps] (feas)
-  {Is the resulting consumption positive and $Q^0<1$\,?};
-\node[lp, left=7mm of feas] (lower)
-  {lower $g^0$:\\ $0.003,\dots,0.0002$};
-\node[box, below=4.5mm of feas] (val)
-  {$\widehat C^0-\widehat G^0=\kappa[D^0,X^0]$;\ \
-   $\widehat V^0-\widehat G^0$ in closed form;\\[2pt]
-   $MS^0=(1-\beta)\,\kappa_d$;\ \ $MG^0=1$,\ $MX^0=0$};
-\node[box, below=4.5mm of val] (ig)
-  {\texttt{initial\_guess} assembled\\[2pt]
-   \footnotesize if components of $X^0$ are not determined by their own equations:
-   we supply a grid of trial values to the solver};
+\node[box, below=4.5mm of det] (claim)
+  {\textbf{What a single equation claims}\\[2pt]
+   states from their own evolution equations\\
+   one decision from the resource constraint\\
+   $g^0$ and $\widehat C^0-\widehat G^0$ by definition;
+   $\widehat V^0-\widehat G^0$ in closed form\\
+   multipliers by a linear solve};
+\node[box, below=4.5mm of claim] (marg)
+  {\textbf{Remaining margins} (unclaimed decisions; states whose
+   equations degenerate into $\psi^g=$ drift)\\[2pt]
+   solved against their own first-order conditions as one small joint
+   block, from a few starting values; each candidate rebuilds all other
+   entries through the claims above};
+\node[dec, below=4.5mm of marg] (land)
+  {Does the constructed point satisfy the complete steady-state system?};
+\node[lp, right=6mm of land] (fb)
+  {fallback: previous construction, grid of trial values (Section 2)};
+\node[box, below=4.5mm of land] (ig)
+  {\texttt{initial\_guess} assembled --- the constructed steady state
+   itself; handed to the root solve of \texttt{uncertain\_expansion},
+   which is unchanged};
 
-% ---------------- arrows ----------------
 \draw[a] (decl) -- (det);
-\draw[a] (det) -- (steps);
-\draw[a] (steps) -- (feas);
-\draw[a] (feas.west) -- node[lbl, above]{no} (lower.east);
-\draw[a] (lower.north) |- (steps.west);
-\draw[a] (feas) -- node[lbl, right=1pt]{yes} (val);
-\draw[a] (val) -- (ig);
+\draw[a] (det) -- (claim);
+\draw[a] (claim) -- (marg);
+\draw[a] (marg) -- (land);
+\draw[a] (land.east) -- node[lbl, above]{no} (fb.west);
+\draw[a] (land) -- node[lbl, right=1pt]{yes} (ig);
 \end{tikzpicture}
 \end{document}
