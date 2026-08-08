@@ -154,15 +154,21 @@ def construct(spec, params, n_states, n_shocks, n_starts=5):
             return None, np.inf
         vals[csym[resid_ctrl]] = r
         num = mknum(vals)
-        for _ in range(2):
+        # self-claimed states can be mutually coupled (e.g. two capital
+        # ratios entering one production function): sweep until settled
+        for _ in range(12):
+            delta = 0.0
             for e, s in zip(states_d, stat):
                 if s not in self_states:
                     continue
                 rr = _scan(lambda x: num(e, ssym[s], x) - x, -30.0, 30.0)
                 if rr is None:
                     return None, np.inf
+                delta = max(delta, abs(rr - vals[ssym[s]]))
                 vals[ssym[s]] = rr
                 num = mknum(vals)
+            if delta < 1e-13:
+                break
         g = num(growth_d)               # the growth equation defines it
         kap = num(kappa_d)
         if not (np.isfinite(g) and np.isfinite(kap)):
